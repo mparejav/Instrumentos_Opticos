@@ -9,25 +9,28 @@ from PIL import Image
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT
 -> 3.) Calculate A[p,q,z] - the angular spectrum at distance z using the Transfer Function
--> 4.) Calculate U[n,m,z] - the output field at distance z using inverse FFT
--> 5.) Re order the output field to center the zero frequency component
+-> 4.) Re order the frequencies to center the zero frequency component
+-> 5.) Calculate U[n,m,z] - the output field at distance z using inverse FFT
 -> 6.) Calculate I[n,m,z] - the intensity at distance z
 """
 
 # variables (for now they will be global, but should be passed as arguments to functions)
-λ = 0  # um. Wavelength of light
+λ = 0.5  # um. Wavelength of light
 Δ = 0  # um. Sampling interval in the spatial domain
 Δf = 0 # um^-1. Sampling interval in the frequency domain
-z = 0 # um. Propagation distance
+z = 10000 # um. Propagation distance
 N = 0 # Number of samples per side of the square grid
 f_Nyquist = 0 # um^-1. Nyquist frequency. Maximum frequency that can be represented without aliasing
 f_max = 0 # um^-1. Maximum frequency in the frequency domain
 L = 0 # um. Physical size of the grid in the spatial domain
+k = 2 * np.pi / λ  # um^-1. Wavenumber
+f_x = 0 # um^-1. Spatial frequency in x direction
+f_y = 0 # um^-1. Spatial frequency in y direction
 
 # Will be given values to this variables throughout the code making sure they are coherent with theorems
 L = 2048 # um. Physical size of the grid in the spatial domain
 λ = 0.5 # um. Wavelength of light
-N = 4096 # Number of samples per side of the square grid (FOR NOW, sensaciones)
+N = 1024 # Number of samples per side of the square grid (FOR NOW, sensaciones)
 
 # -> We know that L = N * Δ  -> Δ = L/N ; 
 Δ = L / N  # um. Sampling interval in the spatial domain
@@ -73,8 +76,90 @@ Conceptual link:
 
 # For now, we will generate a padding to ensure our DFT doesnt have aliasing
 
-padding_factor = 4 # Increase this factor to increase padding
-N_padded = N * padding_factor  # New size for FFT with padding
+padding_factor = 2 # Increase this factor to increase padding
+N_fft = N * padding_factor  # New size for FFT with padding. Digital padding.
 
 # Calculate the FFT of the input field
-A_0 = np.fft.fft2(U_0, s=(N_padded, N_padded))  # FFT2 computes the 2-dimensional discrete Fourier Transform
+A_0 = np.fft.fft2(U_0, s=(N_fft, N_fft))  # FFT2 computes the 2-dimensional discrete Fourier Transform
+
+"""
+# -> 3.) Calculate A[p,q,z] - the angular spectrum at distance z using the Transfer Function
+"""
+
+A_z = np.zeros((N_fft, N_fft), dtype=np.complex128) # Initialize A[p,q,z]. Angular spectrum at distance z
+
+# Arrays of spatial frequencies 
+fx = np.fft.fftfreq(N_fft, d=Δ)   # frequencies along x
+fy = np.fft.fftfreq(N_fft, d=Δ)   # frequencies along y
+
+"""
+np.fft.fftfreq:
+---------------
+- Generates the discrete frequency bins associated with an FFT of length n.
+- Input:
+    n : number of samples (FFT size, must match the array length or padded length)
+    d : sample spacing in the original domain (Δx or Δt)
+- Output:
+    Array of frequencies (cycles per unit of d) of length n.
+    For even n:
+        f = [0, 1, ..., n/2-1, -n/2, ..., -1] / (n*d)
+    For odd n:
+        f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (n*d)
+- Note:
+    These are the physical frequency values (fx, fy, ...) corresponding 
+    to each FFT output index. They must be consistent with the FFT size 
+    (including any padding) and the sampling interval.
+"""
+
+# 2D grids for fx and fy
+FX, FY = np.meshgrid(fx, fy)
+
+# Calculate the Transfer Function
+Transfer_Function = np.exp(1j*z*k * np.sqrt(1-(λ*FX)**2-(λ*FY)**2))
+
+# Calculate A[p,q,z] using the Transfer Function
+A_z = A_0 * Transfer_Function # Element-wise multiplication
+
+
+"""
+-> 4.) Calculate U[n,m,z] - the output field at distance z using inverse FFT
+"""
+
+U_z = np.fft.ifft2(A_z)  # Inverse FFT to get the output field at distance z
+
+U_z = U_z[:N, :N]  # Crop to original size N×N if padding was used
+
+
+"""
+-> 5.) Calculate I[n,m,z] - the intensity at distance z
+"""
+
+I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
+
+
+""" Now we will try to graph the results """
+
+def plot_fields(U0, I_z, title0 = "Input Field U0", titlez = "Output Field Iz"):
+    """
+    Plot input field U0 and propagated output field Uz.
+    Both fields are shown as intensities |U|^2 for visualization.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    
+    # Input field
+    im0 = axes[0].imshow(np.abs(U0)**2, cmap="inferno")
+    axes[0].set_title(title0)
+    plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
+
+    # Output field
+    im1 = axes[1].imshow(I_z, cmap="inferno")
+    axes[1].set_title(titlez)
+    plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
+  
+    plt.tight_layout()
+    plt.show()
+
+
+plot_fields(U_0, I_z, title0="Input Field U[n,m,0]", titlez="Output Field U[n,m,z]")  
+
+print("Done")
