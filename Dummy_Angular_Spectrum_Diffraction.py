@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image   
 
-# Dummy code to try to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
+# Dummy code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
 # Will try to emulate the structure given in class
 
 """
@@ -14,32 +14,32 @@ from PIL import Image
 -> 6.) Calculate I[n,m,z] - the intensity at distance z
 """
 
-# variables (for now they will be global, but should be passed as arguments to functions)
+# Parameters definition
 λ = 0.5  # um. Wavelength of light
-Δ = 0  # um. Sampling interval in the spatial domain
-Δf = 0 # um^-1. Sampling interval in the frequency domain
 z = 10000 # um. Propagation distance
-N = 0 # Number of samples per side of the square grid
-f_Nyquist = 0 # um^-1. Nyquist frequency. Maximum frequency that can be represented without aliasing
-f_max = 0 # um^-1. Maximum frequency in the frequency domain
-L = 0 # um. Physical size of the grid in the spatial domain
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-f_x = 0 # um^-1. Spatial frequency in x direction
-f_y = 0 # um^-1. Spatial frequency in y direction
+L = 800 # um. Physical size of the grid in the spatial domain
 
-# Will be given values to this variables throughout the code making sure they are coherent with theorems
-L = 2048 # um. Physical size of the grid in the spatial domain
-λ = 0.5 # um. Wavelength of light
-N = 1024 # Number of samples per side of the square grid (FOR NOW, sensaciones)
+N = 2048 # Number of samples per side of the square grid (FOR NOW, sensaciones)
 
-# -> We know that L = N * Δ  -> Δ = L/N ; 
-Δ = L / N  # um. Sampling interval in the spatial domain
+# Sampling parameters
+Δf = 1 / L  # um^-1. Sampling interval in the frequency domain
+M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
+f_max = M*Δf  # um^-1. Maximum frequency in the frequency domain
+Δ = L / N  # um. Sampling interval in the spatial domain; L = N * Δ
+
+# Constraints from sampling theorems
+
+if(N < 2*M):
+    print("Warning: Increase number of samples N")
+    print("Current M:", M)
+    print("Current N:", N)
 
 """
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
 """
 # We'll create a transmitance of a circular aperture 
-radius = 100 # um. Radius of the circular aperture
+radius = 10 # um. Radius of the circular aperture
 
 # Physical coordinates in the spatial domain
 x = np.linspace(-L/2, L/2, N, endpoint=False) # start, stop, number of samples. Avoid duplicating the endpoint
@@ -131,35 +131,48 @@ U_z = U_z[:N, :N]  # Crop to original size N×N if padding was used
 
 
 """
--> 5.) Calculate I[n,m,z] - the intensity at distance z
+-> 5.) Calculate I[n,m,z] & I[n,m,0] : the intensity at distance z and at z = 0
 """
 
 I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
 
+I_0 = np.abs(U_0)**2  # Intensity at z = 0
+
+###### Verification of sampling theorems ######
+
 
 """ Now we will try to graph the results """
 
-def plot_fields(U0, I_z, title0 = "Input Field U0", titlez = "Output Field Iz"):
+def plot_fields(I_0, I_z, x, y, title0 = "Input Field I_0", titlez = "Output Field I_z"):
     """
-    Plot input field U0 and propagated output field Uz.
+    Plot input field I_0 and propagated output field Uz.
     Both fields are shown as intensities |U|^2 for visualization.
+    The axes are set according to the physical coordinates (x, y).
     """
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     
     # Input field
-    im0 = axes[0].imshow(np.abs(U0)**2, cmap="inferno")
+    im0 = axes[0].imshow(np.abs(I_0)**2, 
+                         cmap="inferno", 
+                         extent=[x[0], x[-1], y[0], y[-1]])
     axes[0].set_title(title0)
+    axes[0].set_xlabel("x [um]")
+    axes[0].set_ylabel("y [um]")
     plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
 
     # Output field
-    im1 = axes[1].imshow(I_z, cmap="inferno")
+    im1 = axes[1].imshow(I_z, 
+                         cmap="inferno", 
+                         extent=[x[0], x[-1], y[0], y[-1]])
     axes[1].set_title(titlez)
+    axes[1].set_xlabel("x [um]")
+    axes[1].set_ylabel("y [um]")
     plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
   
     plt.tight_layout()
     plt.show()
 
 
-plot_fields(U_0, I_z, title0="Input Field U[n,m,0]", titlez="Output Field U[n,m,z]")  
+plot_fields(I_0, I_z, x, y, title0="Input Field", titlez="Propagated Field")
 
 print("Done")
