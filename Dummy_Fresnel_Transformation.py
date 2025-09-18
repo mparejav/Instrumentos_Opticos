@@ -15,41 +15,31 @@ from PIL import Image
 
 # Parameters definition
 λ = 0.5  # um. Wavelength of light
-z = 500 # um. Propagation distance
+z = 500000 # um. Propagation distance
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-L = 800 # um. Physical size of the grid in the spatial domain
-
-N = 4096 # Number of samples per side of the square grid (FOR NOW, sensaciones)
+N = 512 # Number of samples per side of the square grid (FOR NOW, sensaciones)
 
 # Sampling parameters
-Δf = 1 / L  # um^-1. Sampling interval in the frequency domain
-M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
-f_max = M*Δf  # um^-1. Maximum frequency in the frequency domain
-Δ = L / N  # um. Sampling interval in the spatial domain; L = N * Δ
-
-# Constraints from sampling theorems
-
-if(N < 2*M):
-    print("Warning: Increase number of samples N")
-    print("Current M:", M)
-    print("Current N:", N)
+Δ_0  = 5 # um. Sampling interval in the output field; L = N * Δ
+L_0 = N* Δ_0 # um. Physical size of the grid in the input field
+Δ_f = 1 / (N * Δ_0)  
+Δ_1 =λ*z*Δ_f  # um. Sampling interval in the input field
+L_1 = N* Δ_1 #um. Physical size of the grid in the output field
 
 
 """1. Take or generate the input field as U [n,m,0]
 """
-#Creating an optic field, in this case the field is a circular slit
-radius = 200 #um. The radius of the circle
+#Creating an optic field, in this case the field is a square slit
+width = 50 #um. The radius of the circle
 
 #Creating the coordinates of the space
 
-x = np.linspace (-L/2, L/2, N, endpoint =False)
-y = np.linspace (-L/2, L/2, N, endpoint=False)
+x_0 = np.linspace (-L_0/2, L_0/2, N)
+y_0 = np.linspace (-L_0/2, L_0/2, N)
 
 #Generate input field U [n,m,0]
-
-U_0 = np.zeros ((N,N), dtype=np.complex128)
-X,Y = np.meshgrid (x,y)
-U_0 = np.where(X**2 + Y**2 < radius**2, 1, 0) #Circular aperture transmitance
+X_0,Y_0 = np.meshgrid (x_0,y_0)
+U_0 = np.where((abs(X_0)<width/2) & (abs(Y_0)<width/2), 1, 0) #Circular aperture transmitance
 
 """
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the parabolic phases term
@@ -58,8 +48,8 @@ U_0 = np.where(X**2 + Y**2 < radius**2, 1, 0) #Circular aperture transmitance
 #Firstly we are going to define the DFT kernel 
 
 
-kernel = np.exp((1j*k/(2*z))*((X)**2+ (Y)**2))
-U_1 = U_0*kernel
+sphericalInput = np.exp((1j*k/(2*z))*((X_0)**2+ (Y_0)**2))
+U_1 = U_0*sphericalInput
 
 """
 3. Calculate U'' [n,m,z] with FFT 
@@ -84,26 +74,24 @@ Conceptual link:
   with the physical grid definition (L = N·Δx).
 """
 
-# For now, we will generate a padding to ensure our DFT doesnt have aliasing
-
-padding_factor = 1 # Increase this factor to increase padding
-N_fft = N * padding_factor  # New size for FFT with padding. Digital padding
-
 # We are calculating the fft for U_1
-U_2 =np.fft.fftshift(np.fft.fftshift(np.fft.fft2(U_1, s=(N_fft, N_fft))))
+U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
 
 """
 4. Calculate U [n,m,z] adding the spherical phase output terms
 """
+#We creat the coordinates for our propagated field
+x_1 = np.linspace (-L_1/2, L_1/2, N)
+y_1 = np.linspace (-L_1/2, L_1/2, N)
+
+X_1,Y_1 = np.meshgrid (x_1,y_1)
 
 #We create the spherical phase output terms
 
-sphericalOutput = kernel*np.exp(1j*k*z)/(1j*λ*z)
+sphericalOutput =(np.exp(1j*k*z)/(1j*λ*z))*np.exp((1j*k/(2*z))*((X_1)**2+ (Y_1)**2))
 
-#We need to pass from Frequences Domain to space Domain
-U_3 = np.fft.fftshift(np.fft.ifft(U_2))
 #We multiply the U_2 per sphericalOutput term
-U_z =sphericalOutput*U_3
+U_z =sphericalOutput*U_2
 
 """
 5. Re organize U [n,m,z] using shift
@@ -115,13 +103,18 @@ U_z =sphericalOutput*U_3
 
 I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
 
+#This is for get a logaritmic graphics of output field's intensity
+epsilon = 1e-6  # para evitar log(0)
+I_log = np.log10(I_z + epsilon)
+
+
 I_0 = np.abs(U_0)**2  # Intensity at z = 0
 
 ###### Verification of sampling theorems ######
 
 """ Now we will try to graph the results """
 
-def plot_fields (I_0, I_z, x, y, title0 = "Input field I_0", titlez = "Output field I_z"):
+def plot_fields (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", titlez = "Output field I_z"):
     """
     Plot input field I_0 and propagated output field Uz.
     Both fields are shown as intensities |U|^2 for visualization.
@@ -131,7 +124,7 @@ def plot_fields (I_0, I_z, x, y, title0 = "Input field I_0", titlez = "Output fi
     fig, axes = plt.subplots (1,2,figsize = (10,4))
     
     #Input field
-    im0 = axes[0].imshow(np.abs(I_0)**2, cmap ="inferno",extent= [x[0], x[-1],y[0], y[-1]])
+    im0 = axes[0].imshow(I_0, cmap ="inferno",extent= [x_0[0], x_0[-1],y_0[0], y_0[-1]])
     axes[0].set_title(title0)
     axes[0].set_xlabel ("x [um]")
     axes[0].set_ylabel ("y [um]")
@@ -139,7 +132,7 @@ def plot_fields (I_0, I_z, x, y, title0 = "Input field I_0", titlez = "Output fi
     
     #Output field
     
-    im1 = axes[1].imshow(I_z, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
+    im1 = axes[1].imshow(I_log, cmap="inferno", extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -148,7 +141,7 @@ def plot_fields (I_0, I_z, x, y, title0 = "Input field I_0", titlez = "Output fi
     plt.tight_layout()
     plt.show()
     
-plot_fields(I_0, I_z, x, y, title0="Input Field", titlez="Propagated Field")
+plot_fields(I_0, I_z, x_0, y_0,x_1,y_1, title0="Input Field", titlez="Propagated Field")
 
 print("Done")
     
