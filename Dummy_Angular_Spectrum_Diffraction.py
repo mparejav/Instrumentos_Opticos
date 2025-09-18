@@ -14,48 +14,56 @@ from PIL import Image
 -> 6.) Calculate I[n,m,z] - the intensity at distance z
 """
 
+"""
+These values are defined by the initial conditions. 
+Resolution and number of samples are set initially, but we can also defined the lenght of the grid
+and stablish the other parameters in consequence.
+"""
 # Parameters definition
 λ = 0.5  # um. Wavelength of light
-z = 100 # um. Propagation distance
+Propagation_Distance = 10 # um. Propagation distance
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-Δ = 5 # um. Sampling interval in the spatial domain; L = N * Δ
-N = 1024 # Number of samples per side of the square grid (FOR NOW, sensaciones)
 
+N = 2048 # Number of samples per side of the square grid (FOR NOW, sensaciones)
+L = 600 # um. Physical size of the grid
 
+#Δ = 5 # um. Sampling interval in the spatial domain; L = N * Δ
 
 # Sampling parameters
-L = N * Δ  # um. Physical size of the grid
-Δf = 1 / L  # um^-1. Sampling interval in the frequency domain
+Δ = L / N  # um. Sampling interval in the spatial domain
+Δf = 1 / Δ  # um^-1. Sampling interval in the frequency domain. Spectral discretization
 M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
-f_max = M*Δf  # um^-1. Maximum frequency in the frequency domain
 
-z = M * Δ**2 / λ
-print("z should be less than:", z, "um")
+# Conditions to asure proper sampling
+f_max = M*Δf  # um^-1. Maximum spatial frequency
+z_max = M * Δ**2 / λ # um. Maximum propagation distance in which angular spectrum method is well sampled
+f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
-f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency
-print(f_Nyquist, "um^-1 is the Nyquist frequency")
-
-print("Δx:", Δ, "um")
-
-# Constraints from sampling theorems
+if(Propagation_Distance > z_max):
+    print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
+    #Propagation_Distance = z_max
+    print("Propagation distance set at:", Propagation_Distance)
 
 if(N < 2*M):
-    print("Warning: Increase number of samples N")
-    print("Current M:", M)
-    print("Current N:", N)
+    print("Not enough samples to avoid overlapping with the circular convolutions")
+    #N = 2*M
+    print("Number of samples set at:", N)
+
+if(f_max > f_Nyquist):
+    print("Warning Nyquist condition not met")
 
 """
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
 """
 # We'll create a transmitance of a circular aperture 
-radius = 40 # um. Radius of the circular aperture
+radius = 10 # um. Radius of the circular aperture
 
 # Physical coordinates in the spatial domain
 x = np.linspace(-L/2, L/2, N, endpoint=False) # start, stop, number of samples. Avoid duplicating the endpoint
 y = np.linspace(-L/2, L/2, N, endpoint=False)
 
 # Generate input field -  U(n,m,0)
-#U_0 = np.zeros((N, N), dtype=np.complex128)
+U_0 = np.zeros((N, N), dtype=np.complex128)
 X, Y = np.meshgrid(x, y)    # Create meshgrid
 U_0 = np.where(X**2 + Y**2 <= radius**2, 1, 0) # Circular aperture transmitance
 
@@ -85,21 +93,21 @@ Conceptual link:
 
 # For now, we will generate a padding to ensure our DFT doesnt have aliasing
 
-#padding_factor = 2 # Increase this factor to increase padding
-#N_fft = N * padding_factor  # New size for FFT with padding. Digital padding.
+padding_factor = 1 # Increase this factor to increase padding
+N_fft = N * padding_factor  # New size for FFT with padding. Digital padding.
 
 # Calculate the FFT of the input field
-A_0 = (Δ**2) * np.fft.fft2(U_0)  # FFT2 computes the 2-dimensional discrete Fourier Transform
+A_0 = (Δ**2) * np.fft.fft2(U_0, s=(N_fft, N_fft))  # FFT2 computes the 2-dimensional discrete Fourier Transform
 
 """
 # -> 3.) Calculate A[p,q,z] - the angular spectrum at distance z using the Transfer Function
 """
 
-A_z = np.zeros((N, N), dtype=np.complex128) # Initialize A[p,q,z]. Angular spectrum at distance z
+A_z = np.zeros((N_fft, N_fft), dtype = np.complex128) # Initialize A[p,q,z]. Angular spectrum at distance z
 
 # Arrays of spatial frequencies 
-fx = np.fft.fftfreq(N, d=Δ)   # frequencies along x
-fy = np.fft.fftfreq(N, d=Δ)   # frequencies along y
+fx = np.fft.fftfreq(N_fft, d = Δ)   # frequencies along x
+fy = np.fft.fftfreq(N_fft, d = Δ)   # frequencies along y
 
 """
 np.fft.fftfreq:
@@ -107,7 +115,7 @@ np.fft.fftfreq:
 - Generates the discrete frequency bins associated with an FFT of length n.
 - Input:
     n : number of samples (FFT size, must match the array length or padded length)
-    d : sample spacing in the original domain (Δx or Δt)
+    d : sample spacing in the ORIGINAL DOMAIN (Δx)
 - Output:
     Array of frequencies (cycles per unit of d) of length n.
     For even n:
@@ -124,13 +132,14 @@ np.fft.fftfreq:
 FX, FY = np.meshgrid(fx, fy)
 
 # Calculate the Transfer Function
-Transfer_Function = np.exp(1j*z*k * np.sqrt(1-(λ*FX)**2-(λ*FY)**2))
+Transfer_Function = np.exp(1j * Propagation_Distance * k * np.sqrt(1-(λ*FX)**2-(λ*FY)**2))
 
-Transfer_Function = np.fft.fftshift(Transfer_Function)  # Shift zero frequency to center
+"""
+DUDA: Debo shiftear Transfer Function? Según como esta definido quedan ordenados de la misma forma.
+"""
 
 # Calculate A[p,q,z] using the Transfer Function
 A_z = A_0 * Transfer_Function # Element-wise multiplication
-
 
 """
 -> 4.) Calculate U[n,m,z] - the output field at distance z using inverse FFT
@@ -140,22 +149,18 @@ U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at dis
 
 #U_z = U_z[:N, :N]  # Crop to original size N×N if padding was used
 
+#U_z = np.fft.fftshift(U_z)  # Shift zero frequency component to the center of the spectrum
 
 """
--> 5.) Calculate I[n,m,z] & I[n,m,0] : the intensity at distance z and at z = 0
-"""
+-> 5.) Calculate I[n,m,z] - the intensity at distance z
+""" 
 
-I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field  
-
-###### Verification of sampling theorems ######
+I_z = np.abs(U_z)**2  
 
 
-""" Now we will try to graph the results """
-
-def plot_fields(U_0, I_z, x, y, title0 = "Input Field U_0", titlez = "Output Field I_z"):
+def plot_fields(U_0, I_z, x, y, title0 = "Aperture", titlez = "Intensity field I_z"):
     """
-    Plot input field U_0 and propagated output field _z.
-    Both fields are shown as intensities |U|^2 for visualization.
+    Plot input field Aperture and propagated output field I_z.
     The axes are set according to the physical coordinates (x, y).
     """
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -182,6 +187,6 @@ def plot_fields(U_0, I_z, x, y, title0 = "Input Field U_0", titlez = "Output Fie
     plt.show()
 
 
-plot_fields(U_0, I_z, x, y, title0="Transmitance", titlez="Intensisty of propagated field")
+plot_fields(U_0, I_z, x, y, title0 = "Transmitance", titlez = "Intensity of propagated field")
 
 print("Done")
