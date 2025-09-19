@@ -21,33 +21,34 @@ and stablish the other parameters in consequence.
 """
 # Parameters definition
 λ = 0.5  # um. Wavelength of light
-Propagation_Distance = 10 # um. Propagation distance
+z = 1000 # um. Propagation distance [300, ]
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-
-N = 2048 # Number of samples per side of the square grid (FOR NOW, sensaciones)
-L = 600 # um. Physical size of the grid
+N = 4096 # Number of samples per side of the square grid (FOR NOW, sensaciones)
+L = 800 # um. Physical size of the grid
 
 #Δ = 5 # um. Sampling interval in the spatial domain; L = N * Δ
 
 # Sampling parameters
 Δ = L / N  # um. Sampling interval in the spatial domain
-Δf = 1 / Δ  # um^-1. Sampling interval in the frequency domain. Spectral discretization
+Δf = 1 / (Δ*N)  # um^-1. Sampling interval in the frequency domain. Spectral discretization ???
 M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
 
 # Conditions to asure proper sampling
 f_max = M*Δf  # um^-1. Maximum spatial frequency
-z_max = M * Δ**2 / λ # um. Maximum propagation distance in which angular spectrum method is well sampled
+z_max = (N * Δ**2) / λ # um. Maximum propagation distance in which angular spectrum method is well sampled
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
-if(Propagation_Distance > z_max):
+if(z > z_max):
     print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
+    print("z_max = ", z_max, "um")
     #Propagation_Distance = z_max
-    print("Propagation distance set at:", Propagation_Distance)
+    #print("Propagation distance set at:", Propagation_Distance)
 
 if(N < 2*M):
     print("Not enough samples to avoid overlapping with the circular convolutions")
     #N = 2*M
-    print("Number of samples set at:", N)
+    #print("Number of samples set at:", N)
+    print(M)
 
 if(f_max > f_Nyquist):
     print("Warning Nyquist condition not met")
@@ -56,7 +57,7 @@ if(f_max > f_Nyquist):
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
 """
 # We'll create a transmitance of a circular aperture 
-radius = 10 # um. Radius of the circular aperture
+radius = 20 # um. Radius of the circular aperture
 
 # Physical coordinates in the spatial domain
 x = np.linspace(-L/2, L/2, N, endpoint=False) # start, stop, number of samples. Avoid duplicating the endpoint
@@ -131,12 +132,16 @@ np.fft.fftfreq:
 # 2D grids for fx and fy
 FX, FY = np.meshgrid(fx, fy)
 
-# Calculate the Transfer Function
-Transfer_Function = np.exp(1j * Propagation_Distance * k * np.sqrt(1-(λ*FX)**2-(λ*FY)**2))
+# Argument of the square root in the Transfer Function
+arg = 1 - (λ*FX)**2 - (λ*FY)**2
 
-"""
-DUDA: Debo shiftear Transfer Function? Según como esta definido quedan ordenados de la misma forma.
-"""
+# Mask: Only compute where arg >= 0 to avoid evanescent waves and problems with sqrt of negative numbers
+mask = arg >= 0
+
+# Initialize Transfer_Function with zeros
+Transfer_Function = np.zeros_like(FX, dtype = np.complex128)
+
+Transfer_Function[mask] = np.exp(1j * z * k * np.sqrt(arg[mask]))
 
 # Calculate A[p,q,z] using the Transfer Function
 A_z = A_0 * Transfer_Function # Element-wise multiplication
@@ -147,16 +152,11 @@ A_z = A_0 * Transfer_Function # Element-wise multiplication
 
 U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at distance z
 
-#U_z = U_z[:N, :N]  # Crop to original size N×N if padding was used
-
-#U_z = np.fft.fftshift(U_z)  # Shift zero frequency component to the center of the spectrum
-
 """
 -> 5.) Calculate I[n,m,z] - the intensity at distance z
 """ 
 
 I_z = np.abs(U_z)**2  
-
 
 def plot_fields(U_0, I_z, x, y, title0 = "Aperture", titlez = "Intensity field I_z"):
     """
@@ -166,18 +166,14 @@ def plot_fields(U_0, I_z, x, y, title0 = "Aperture", titlez = "Intensity field I
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     
     # Input field
-    im0 = axes[0].imshow(np.abs(U_0)**2, 
-                         cmap="inferno", 
-                         extent=[x[0], x[-1], y[0], y[-1]])
+    im0 = axes[0].imshow(np.abs(U_0)**2, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
     axes[0].set_title(title0)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
     plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
 
     # Output field
-    im1 = axes[1].imshow(I_z, 
-                         cmap="inferno", 
-                         extent=[x[0], x[-1], y[0], y[-1]])
+    im1 = axes[1].imshow(I_z, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -185,7 +181,6 @@ def plot_fields(U_0, I_z, x, y, title0 = "Aperture", titlez = "Intensity field I
   
     plt.tight_layout()
     plt.show()
-
 
 plot_fields(U_0, I_z, x, y, title0 = "Transmitance", titlez = "Intensity of propagated field")
 
