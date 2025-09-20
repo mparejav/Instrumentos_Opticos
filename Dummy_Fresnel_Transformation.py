@@ -15,22 +15,37 @@ from PIL import Image
 
 # Parameters definition
 λ = 0.5  # um. Wavelength of light
-z = 500000 # um. Propagation distance
+z = 10000# um. Propagation distance
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-N = 512 # Number of samples per side of the square grid (FOR NOW, sensaciones)
-
+#Δ_0  = 5 # um. Sampling interval in the output field; L = N * Δ
+L_0 = 800 # um. Physical size of the grid in the input field
+N = 2048
+Δ_0 = L_0/N
 # Sampling parameters
-Δ_0  = 5 # um. Sampling interval in the output field; L = N * Δ
-L_0 = N* Δ_0 # um. Physical size of the grid in the input field
-Δ_f = 1 / (N * Δ_0)  
+#N = int(L_0/Δ_0)  # Number of samples per side of the square grid 
+Δ_f = 1 /L_0 #um^-1. sampling interval in the frequences domain 
 Δ_1 =λ*z*Δ_f  # um. Sampling interval in the input field
 L_1 = N* Δ_1 #um. Physical size of the grid in the output field
+M = 1/(λ*Δ_f) # Number of samples to represent the signal per axis 
+z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
+f_Nyquist = 1/(2*Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
 
+# Constraints from sampling theorems
+if(N < 2*M):
+    print("Warning: Increase number of samples N")
+    print("Current M:", M)
+    print("Current N:", N)
+  
+if (z<z_min):
+    print("Warning: Increase z")
+    print("Current z_min:", z_min, "um")
+    
+  
 """1. Take or generate the input field as U [n,m,0]
 """
 #Creating an optic field, in this case the field is a square slit
-width = 50 #um. The radius of the circle
+width = 5 #um. The radius of the circle
 
 #Creating the coordinates of the space
 
@@ -39,7 +54,7 @@ y_0 = np.linspace (-L_0/2, L_0/2, N)
 
 #Generate input field U [n,m,0]
 X_0,Y_0 = np.meshgrid (x_0,y_0)
-U_0 = np.where((abs(X_0)<width/2) & (abs(Y_0)<width/2), 1, 0) #Circular aperture transmitance
+U_0 = np.where((X_0**2)+(Y_0**2)<=width**2, 1, 0) #Circular aperture transmitance
 
 """
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the parabolic phases term
