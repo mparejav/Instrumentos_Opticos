@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from PIL import Image   
+from Masks import *
 
 # Dummy code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
 # Will try to emulate the structure given in class
@@ -19,18 +20,20 @@ These values are defined by the initial conditions.
 Resolution and number of samples are set initially, but we can also defined the lenght of the grid
 and stablish the other parameters in consequence.
 """
-# Parameters definition
-λ = 0.5  # um. Wavelength of light
-z = 1000 # um. Propagation distance [300, ]
+# Light parameters
+λ = 0.6328  # um. Wavelength of light (He-Ne laser)
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-N = 4096 # Number of samples per side of the square grid (FOR NOW, sensaciones)
-L = 800 # um. Physical size of the grid
 
-#Δ = 5 # um. Sampling interval in the spatial domain; L = N * Δ
+# Sensor parameters (CS165MU1 Cmos sensor taken as reference)
+Δ = 3.45 # um. Sampling interval in the spatial domain. (Square pixel size)
+N = 1440 # Number of samples per side of the square grid 
+L = N * Δ  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
+
+# Setup parameters
+z = 20000 # um. Propagation distance 
 
 # Sampling parameters
-Δ = L / N  # um. Sampling interval in the spatial domain
-Δf = 1 / (Δ*N)  # um^-1. Sampling interval in the frequency domain. Spectral discretization ???
+Δf = 1 / (Δ*N)  # um^-1. Sampling interval in the frequency domain. Spec    tral discretization ???
 M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
 
 # Conditions to asure proper sampling
@@ -38,35 +41,37 @@ f_max = M*Δf  # um^-1. Maximum spatial frequency
 z_max = (N * Δ**2) / λ # um. Maximum propagation distance in which angular spectrum method is well sampled
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
+# Graph parameters
+Cut_Factor = 100 # % Porcentage cap graph
+
 if(z > z_max):
     print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
     print("z_max = ", z_max, "um")
-    #Propagation_Distance = z_max
-    #print("Propagation distance set at:", Propagation_Distance)
-
-if(N < 2*M):
-    print("Not enough samples to avoid overlapping with the circular convolutions")
-    #N = 2*M
-    #print("Number of samples set at:", N)
-    print(M)
+    Propagation_Distance = z_max
+    print("Propagation distance set at:", Propagation_Distance)
 
 if(f_max > f_Nyquist):
-    print("Warning Nyquist condition not met")
+    #print("Warning Nyquist condition not met")
+    pass
 
 """
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
 """
-# We'll create a transmitance of a circular aperture 
-radius = 20 # um. Radius of the circular aperture
+# Create physical coordinates centered at 0
+x = np.linspace(-L/2, L/2, N, endpoint = False)
+y = np.linspace(-L/2, L/2, N, endpoint = False)
+X, Y = np.meshgrid(x, y)
 
-# Physical coordinates in the spatial domain
-x = np.linspace(-L/2, L/2, N, endpoint=False) # start, stop, number of samples. Avoid duplicating the endpoint
-y = np.linspace(-L/2, L/2, N, endpoint=False)
+#U_0 = circle(20, X, Y)
+#U_0 = rectangle(60, 60, X, Y)
+#U_0 = vertical_slit(40, X, Y)
+#U_0 = horizontal_slit(40, X, Y)
+#U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
 
-# Generate input field -  U(n,m,0)
-U_0 = np.zeros((N, N), dtype=np.complex128)
-X, Y = np.meshgrid(x, y)    # Create meshgrid
-U_0 = np.where(X**2 + Y**2 <= radius**2, 1, 0) # Circular aperture transmitance
+U_0 = load_image('Images/Elipse.png', N)
+
+#simulate_and_graph(shape='image', image_path='/home/manuel/Documents/GitHub/FIbras_Fotonica/Parcial_4/Images/Rombo.png')  # Ejemplo de uso con imagen
+
 
 """
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT
@@ -158,30 +163,12 @@ U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at dis
 
 I_z = np.abs(U_z)**2  
 
-def plot_fields(U_0, I_z, x, y, title0 = "Aperture", titlez = "Intensity field I_z"):
-    """
-    Plot input field Aperture and propagated output field I_z.
-    The axes are set according to the physical coordinates (x, y).
-    """
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-    
-    # Input field
-    im0 = axes[0].imshow(np.abs(U_0)**2, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
-    axes[0].set_title(title0)
-    axes[0].set_xlabel("x [um]")
-    axes[0].set_ylabel("y [um]")
-    plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
+"""
+Graph results   
+"""
 
-    # Output field
-    im1 = axes[1].imshow(I_z, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
-    axes[1].set_title(titlez)
-    axes[1].set_xlabel("x [um]")
-    axes[1].set_ylabel("y [um]")
-    plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
-  
-    plt.tight_layout()
-    plt.show()
+espectro = np.fft.fftshift(np.log(np.abs(A_z)+1))
 
-plot_fields(U_0, I_z, x, y, title0 = "Transmitance", titlez = "Intensity of propagated field")
+plot_fields(U_0, I_z, x, y, Cut_Factor, title0 = "Transmitance", titlez = "Intensity of propagated field")
 
 print("Done")
