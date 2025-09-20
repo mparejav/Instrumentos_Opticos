@@ -75,21 +75,22 @@ the Intensity field of a difraction pattern propagated a distance z; the third a
 Returns:
     An image with two figures.
 """
-def plot_fields(Mask, Intensity_Propagated_Field, x, y, Cut_Factor, title0 = "Aperture", titlez = "Intensity field I_z"):
+def plot_fields(Mask, Intensity_Propagated_Field, x, y, x_p, y_p, Cut_Factor, title0 = "Aperture", titlez = "Intensity field I_z"):
     
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     
     # Input field
-    im0 = axes[0].imshow(np.abs(Mask)**2, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
+    im0 = axes[0].imshow(Mask, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]])
     axes[0].set_title(title0)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
     plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
 
+    # Porcentage to decimal
     Cut_Factor = (Cut_Factor / 100)
 
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="inferno", extent=[x[0], x[-1], y[0], y[-1]], vmin=0, vmax=np.max(Intensity_Propagated_Field * Cut_Factor))
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="inferno", extent=[x_p[0], x_p[-1], y_p[0], y_p[-1]])
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -97,3 +98,7 @@ def plot_fields(Mask, Intensity_Propagated_Field, x, y, Cut_Factor, title0 = "Ap
   
     plt.tight_layout()
     plt.show()
+    
+    
+
+    

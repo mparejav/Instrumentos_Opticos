@@ -42,7 +42,7 @@ z_max = (N * Δ**2) / λ # um. Maximum propagation distance in which angular spe
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
 # Graph parameters
-Cut_Factor = 100 # % Porcentage cap graph
+Cut_Factor = 30 # % Porcentage cap graph
 
 if(z > z_max):
     print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
@@ -62,16 +62,12 @@ x = np.linspace(-L/2, L/2, N, endpoint = False)
 y = np.linspace(-L/2, L/2, N, endpoint = False)
 X, Y = np.meshgrid(x, y)
 
-#U_0 = circle(20, X, Y)
+#U_0 = circle(100, X, Y)
 #U_0 = rectangle(60, 60, X, Y)
 #U_0 = vertical_slit(40, X, Y)
 #U_0 = horizontal_slit(40, X, Y)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-
-U_0 = load_image('Images/Elipse.png', N)
-
-#simulate_and_graph(shape='image', image_path='/home/manuel/Documents/GitHub/FIbras_Fotonica/Parcial_4/Images/Rombo.png')  # Ejemplo de uso con imagen
-
+U_0 = load_image('Images/Transm_E09.png', N)
 
 """
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT
@@ -163,12 +159,16 @@ U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at dis
 
 I_z = np.abs(U_z)**2  
 
+epsilon = 1e-6  # Small constant to avoid log(0)
+
+I_log = np.log10(I_z + epsilon)  # Logarithmic scale to enhance visibility
+
 """
 Graph results   
 """
 
 espectro = np.fft.fftshift(np.log(np.abs(A_z)+1))
 
-plot_fields(U_0, I_z, x, y, Cut_Factor, title0 = "Transmitance", titlez = "Intensity of propagated field")
+plot_fields(U_0, I_z, x, y, x, y, Cut_Factor, title0 = "Transmitance", titlez = "Intensity of propagated field")
 
 print("Done")

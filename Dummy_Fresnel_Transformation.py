@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from PIL import Image   
+from Masks import *
 
 #Dummy code to try to generate the difraction pattern using The Fresnel transformation method
 
@@ -13,23 +14,29 @@ from PIL import Image
 6. Calculate the intensity to each field U_0 and U_z
 """
 
-# Parameters definition
-λ = 0.5  # um. Wavelength of light
-z = 10000# um. Propagation distance
+# Light parameters
+λ = 0.6328  # um. Wavelength of light (He-Ne laser)
 k = 2 * np.pi / λ  # um^-1. Wavenumber
-#Δ_0  = 5 # um. Sampling interval in the output field; L = N * Δ
-L_0 = 800 # um. Physical size of the grid in the input field
-N = 2048
-Δ_0 = L_0/N
-# Sampling parameters
-#N = int(L_0/Δ_0)  # Number of samples per side of the square grid 
-Δ_f = 1 /L_0 #um^-1. sampling interval in the frequences domain 
-Δ_1 =λ*z*Δ_f  # um. Sampling interval in the input field
-L_1 = N* Δ_1 #um. Physical size of the grid in the output field
-M = 1/(λ*Δ_f) # Number of samples to represent the signal per axis 
-z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
-f_Nyquist = 1/(2*Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
+# Sensor parameters (CS165MU1 Cmos sensor taken as reference)
+Δ_0 = 3.45 # um. Sampling interval in the spatial domain. (Square pixel size)
+N = 1440 # Number of samples per side of the square grid 
+L_0 = N * Δ_0  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
+
+# Setup parameters
+z = 200000 # um. Propagation distance
+
+# Sampling parameters
+Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
+M = 1 / (λ * Δ_f) # Number of samples to represent the signal per axis
+z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
+f_Nyquist = 1 / (2 * Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
+
+Δ_1 = λ * z * Δ_f  # um. Sampling interval in the input field           ????
+L_1 = N * Δ_1 #um. Physical size of the grid in the output field        ????
+
+# Graph parameters
+Cut_Factor = 100 # % Porcentage cap graph
 
 # Constraints from sampling theorems
 if(N < 2*M):
@@ -37,34 +44,36 @@ if(N < 2*M):
     print("Current M:", M)
     print("Current N:", N)
   
-if (z<z_min):
-    print("Warning: Increase z")
-    print("Current z_min:", z_min, "um")
+if(z > z_min):
+    print("Not enough propagation distance for proper sampling in the Fresnel transformation method.")
+    print("z_min = ", z_min, "um")
+    Propagation_Distance = z_min
+    print("Propagation distance set at:", Propagation_Distance)
     
   
-"""1. Take or generate the input field as U [n,m,0]
 """
-#Creating an optic field, in this case the field is a square slit
-width = 5 #um. The radius of the circle
-
-#Creating the coordinates of the space
-
-x_0 = np.linspace (-L_0/2, L_0/2, N)
-y_0 = np.linspace (-L_0/2, L_0/2, N)
-
-#Generate input field U [n,m,0]
+1. Take or generate the input field as U [n,m,0]
+"""
+#Creating the coordinates of the space centered at 0
+x_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
+y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
-U_0 = np.where((X_0**2)+(Y_0**2)<=width**2, 1, 0) #Circular aperture transmitance
+
+# Generating the aperture function. Uncomment the one you want to use
+#U_0 = circle(100, X_0, Y_0)
+#U_0 = rectangle(60, 60, X_0, Y_0)
+#U_0 = vertical_slit(40, X_0, Y_0)
+#U_0 = horizontal_slit(40, X_0, Y_0)
+#U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
+U_0 = load_image('Images/Transm_E09.png', N)  # Sometimes its .png and sometimes .jpg
 
 """
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the parabolic phases term
 """
 
 #Firstly we are going to define the DFT kernel 
-
-
-sphericalInput = np.exp((1j*k/(2*z))*((X_0)**2+ (Y_0)**2))
-U_1 = U_0*sphericalInput
+SphericalInput = np.exp((1j*k/(2*z))*((X_0)**2+ (Y_0)**2))
+U_1 = U_0 * SphericalInput
 
 """
 3. Calculate U'' [n,m,z] with FFT 
@@ -96,67 +105,72 @@ U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
 4. Calculate U [n,m,z] adding the spherical phase output terms
 """
 #We creat the coordinates for our propagated field
-x_1 = np.linspace (-L_1/2, L_1/2, N)
-y_1 = np.linspace (-L_1/2, L_1/2, N)
-
-X_1,Y_1 = np.meshgrid (x_1,y_1)
+x_1 = np.linspace (-L_1/2, L_1/2, N, endpoint = False)
+y_1 = np.linspace (-L_1/2, L_1/2, N, endpoint = False)
+X_1,Y_1 = np.meshgrid (x_1, y_1)
 
 #We create the spherical phase output terms
-
-sphericalOutput =(np.exp(1j*k*z)/(1j*λ*z))*np.exp((1j*k/(2*z))*((X_1)**2+ (Y_1)**2))
+SphericalOutput =(np.exp(1j*k*z)/(1j*λ*z))*np.exp((1j*k/(2*z))*((X_1)**2+ (Y_1)**2))
 
 #We multiply the U_2 per sphericalOutput term
-U_z =sphericalOutput*U_2
+U_z = SphericalOutput * U_2
 
 """
-5. Re organize U [n,m,z] using shift
-"""
-
-"""
-6. Calculate the intensity to each field U_0 and U_z
-"""
-
+-> 5.) Calculate I[n,m,z] - the intensity at distance z
+""" 
 I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
+
+I_0 = np.abs(U_0)**2  # Intensity at z = 0   
+  
+# Is best to use the same kind of graph in both aproximations, for now ill let it there
 
 #This is for get a logaritmic graphics of output field's intensity
 epsilon = 1e-6  # para evitar log(0)
 I_log = np.log10(I_z + epsilon)
+  
 
-
-I_0 = np.abs(U_0)**2  # Intensity at z = 0
 
 ###### Verification of sampling theorems ######
 
 """ Now we will try to graph the results """
 
-def plot_fields (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", titlez = "Output field I_z"):
+def plot_fields_log (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", titlez = "Output field I_z"):
     """
     Plot input field I_0 and propagated output field Uz.
     Both fields are shown as intensities |U|^2 for visualization.
     The axes are set according to the physical coordinates (x, y).
     """
-    
+
     fig, axes = plt.subplots (1,2,figsize = (10,4))
-    
+
     #Input field
     im0 = axes[0].imshow(I_0, cmap ="inferno",extent= [x_0[0], x_0[-1],y_0[0], y_0[-1]])
     axes[0].set_title(title0)
     axes[0].set_xlabel ("x [um]")
     axes[0].set_ylabel ("y [um]")
     plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
-    
+
     #Output field
-    
+
     im1 = axes[1].imshow(I_log, cmap="inferno", extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
     plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
-  
+
     plt.tight_layout()
     plt.show()
-    
-plot_fields(I_0, I_z, x_0, y_0,x_1,y_1, title0="Input Field", titlez="Propagated Field")
+
+#plot_fields_log(I_0, I_z, x_0, y_0,x_1,y_1, title0="Input Field", titlez="Propagated Field")
+
+
+""" Now we will graph the results """
+plot_fields(I_0, I_log, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
+
+
+
+
+
 
 print("Done")
     
