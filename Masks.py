@@ -99,6 +99,63 @@ def plot_fields(Mask, Intensity_Propagated_Field, x, y, x_p, y_p, Cut_Factor, ti
     plt.tight_layout()
     plt.show()
     
-    
 
+"""
+Generates a Ronchi ruling mask.
+
+Args:
+    lines_per_mm: Number of lines per mm (spatial frequency).
+    X, Y: Meshgrids with spatial coordinates [um].
+    n: Iterator for Talbot length calculation.
+
+Returns:
+    mask (2D array): Binary mask with Ronchi grating pattern.
+"""
+# Function that generates a Ronchi ruling mask
+def Ronchi_mask(lines_per_mm, X, Y):
+
+    # Convert lines/mm to spatial frequency in microns
+    period_um = 1000 / lines_per_mm   # um per line pair (bright+dark)
+
+    # Square wave along x-axis: 1 inside slit, 0 outside
+    mask = (np.mod(X, period_um) < (period_um / 2)).astype(int)
     
+    return mask
+
+def Talbot_length(lines_per_mm, n):
+    """Calculate the Talbot length for a given Ronchi grating.
+
+    Args:
+        lines_per_mm: Number of lines per mm (spatial frequency).
+        n: Iterator for Talbot length calculation.
+        
+    Returns:
+        Propagation_Distance_um : Calculated Talbot length in microns.
+    """
+
+    λ = 0.633  # um. Wavelength of the light source (He-Ne laser)
+
+    # Convert lines/mm to spatial frequency in microns
+    period_um = 1000 / lines_per_mm   # um per line pair (bright+dark)
+
+    # Calculates Talbot length
+    talbot_length = (n * period_um**2) / (2 * λ)
+    
+    print(f"Talbot length for {lines_per_mm} lines/mm: {talbot_length:.2f} um")
+    
+    Propagation_Distance_um = talbot_length
+    print(f"Propagation distance set at: {Propagation_Distance_um} um")
+
+    return Propagation_Distance_um
+
+def Paco_mask(Number_of_Samples):
+    
+    L = 5800 # um. Physical size of the sensor grid for paco image
+    
+    x = np.linspace(-L/2, L/2, Number_of_Samples, endpoint = False)
+    y = np.linspace(-L/2, L/2, Number_of_Samples, endpoint = False)
+    X, Y = np.meshgrid(x, y)
+
+    Pixel_Size = L / Number_of_Samples  # um. Sampling interval in the spatial domain. (Square pixel size)
+
+    return X, Y, Pixel_Size

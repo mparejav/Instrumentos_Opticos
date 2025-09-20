@@ -27,7 +27,8 @@ k = 2 * np.pi / λ  # um^-1. Wavenumber
 # Sensor parameters (CS165MU1 Cmos sensor taken as reference)
 Δ = 3.45 # um. Sampling interval in the spatial domain. (Square pixel size)
 N = 1440 # Number of samples per side of the square grid 
-L = N * Δ  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
+L = N * Δ  # um. Physical size of the sensor grid (Emm...) ~ 5 mm 
+print("Physical size of the grid L:", L, "um")
 
 # Setup parameters
 z = 20000 # um. Propagation distance 
@@ -67,7 +68,7 @@ X, Y = np.meshgrid(x, y)
 #U_0 = vertical_slit(40, X, Y)
 #U_0 = horizontal_slit(40, X, Y)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-U_0 = load_image('Images/Transm_E09.png', N)
+U_0 = load_image('Images/Rochi_square.png', N)
 
 """
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT

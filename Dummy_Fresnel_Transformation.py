@@ -19,38 +19,56 @@ from Masks import *
 k = 2 * np.pi / λ  # um^-1. Wavenumber
 
 # Sensor parameters (CS165MU1 Cmos sensor taken as reference)
-Δ_0 = 3.45 # um. Sampling interval in the spatial domain. (Square pixel size)
+Δ_0 = 3.475 # um. Sampling interval in the spatial domain. (Square pixel size) 3.45
 N = 1440 # Number of samples per side of the square grid 
 L_0 = N * Δ_0  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
+print("Physical size of the grid L:", L_0, "um")
+
+
+
+"""
+Solo descomentar para el ejercicio de la imagen de Paco
+"""
+L_0 = 5800 # um. Physical size of the sensor grid for paco image
+Δ_0 = L_0 / N  # um. Sampling interval in the spatial domain
+
+
 
 # Setup parameters
-z = 200000 # um. Propagation distance
+z = 60000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
 M = 1 / (λ * Δ_f) # Number of samples to represent the signal per axis
 z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
 f_Nyquist = 1 / (2 * Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
-
-Δ_1 = λ * z * Δ_f  # um. Sampling interval in the input field           ????
-L_1 = N * Δ_1 #um. Physical size of the grid in the output field        ????
+Δ_1 = λ * z * Δ_f  # um. Sampling interval in the output field           
+L_1 = N * Δ_1 #um. Physical size of the grid in the output field        
 
 # Graph parameters
 Cut_Factor = 100 # % Porcentage cap graph
 
+# Talbot parameters
+lines_per_mm = 10  # Ronchi grating parameter
+m = 4  # Talbot length iterator
+
 # Constraints from sampling theorems
 if(N < 2*M):
-    print("Warning: Increase number of samples N")
-    print("Current M:", M)
-    print("Current N:", N)
+    #print("Warning: Increase number of samples N")
+    #print("Current M:", M)
+    #print("Current N:", N)
+    pass
   
-if(z > z_min):
+#z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
+
+if(z < z_min):
     print("Not enough propagation distance for proper sampling in the Fresnel transformation method.")
     print("z_min = ", z_min, "um")
     Propagation_Distance = z_min
     print("Propagation distance set at:", Propagation_Distance)
     
-  
+print("Propagation distance z:", z, "um")
+    
 """
 1. Take or generate the input field as U [n,m,0]
 """
@@ -60,12 +78,15 @@ y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
 # Generating the aperture function. Uncomment the one you want to use
-#U_0 = circle(100, X_0, Y_0)
+U_0 = circle(100, X_0, Y_0)
 #U_0 = rectangle(60, 60, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-U_0 = load_image('Images/Transm_E09.png', N)  # Sometimes its .png and sometimes .jpg
+#U_0 = load_image('Images/Paco.png', N)  # Sometimes its .png and sometimes .jpg
+#U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
+
+
 
 """
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the parabolic phases term
