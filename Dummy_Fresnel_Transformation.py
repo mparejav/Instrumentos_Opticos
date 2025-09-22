@@ -35,7 +35,7 @@ L_0 = 5800 # um. Physical size of the sensor grid for paco image
 
 
 # Setup parameters
-z = 60000 # um. Propagation distance
+z = 320000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
@@ -50,7 +50,7 @@ Cut_Factor = 100 # % Porcentage cap graph
 
 # Talbot parameters
 lines_per_mm = 10  # Ronchi grating parameter
-m = 4  # Talbot length iterator
+m = 1  # Talbot length iterator
 
 # Constraints from sampling theorems
 if(N < 2*M):
@@ -59,7 +59,7 @@ if(N < 2*M):
     #print("Current N:", N)
     pass
   
-#z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
+z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
 
 if(z < z_min):
     print("Not enough propagation distance for proper sampling in the Fresnel transformation method.")
@@ -78,13 +78,13 @@ y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
 # Generating the aperture function. Uncomment the one you want to use
-U_0 = circle(100, X_0, Y_0)
+#U_0 = circle(100, X_0, Y_0)
 #U_0 = rectangle(60, 60, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
 #U_0 = load_image('Images/Paco.png', N)  # Sometimes its .png and sometimes .jpg
-#U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
+U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
 
 
 

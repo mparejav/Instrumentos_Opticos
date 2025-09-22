@@ -139,7 +139,7 @@ def Talbot_length(lines_per_mm, n):
     period_um = 1000 / lines_per_mm   # um per line pair (bright+dark)
 
     # Calculates Talbot length
-    talbot_length = (n * period_um**2) / (2 * λ)
+    talbot_length = (n * 2*period_um**2) / λ
     
     print(f"Talbot length for {lines_per_mm} lines/mm: {talbot_length:.2f} um")
     
