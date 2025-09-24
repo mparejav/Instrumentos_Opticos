@@ -20,7 +20,7 @@ k = 2 * np.pi / λ  # um^-1. Wavenumber
 
 # Sensor parameters (CS165MU1 Cmos sensor taken as reference)
 Δ_0 = 3.475 # um. Sampling interval in the spatial domain. (Square pixel size) 3.45
-N = 1440 # Number of samples per side of the square grid 
+N = 1024 # Number of samples per side of the square grid 
 L_0 = N * Δ_0  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
 print("Physical size of the grid L:", L_0, "um")
 
@@ -29,21 +29,21 @@ print("Physical size of the grid L:", L_0, "um")
 """
 Solo descomentar para el ejercicio de la imagen de Paco
 """
-L_0 = 5800 # um. Physical size of the sensor grid for paco image
+L_0 = 500 # um. Physical size of the sensor grid for paco image
 Δ_0 = L_0 / N  # um. Sampling interval in the spatial domain
 
 
 
 # Setup parameters
-z = 320000 # um. Propagation distance
+z = 10000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
 M = 1 / (λ * Δ_f) # Number of samples to represent the signal per axis
 z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
 f_Nyquist = 1 / (2 * Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
-Δ_1 = λ * z * Δ_f  # um. Sampling interval in the output field           
-L_1 = N * Δ_1 #um. Physical size of the grid in the output field        
+Δ_1 = λ *z/N*Δ_0  # um. Sampling interval in the output field           
+L_1 = N * Δ_1 #um. Physical size of the grid in the output field      
 
 # Graph parameters
 Cut_Factor = 100 # % Porcentage cap graph
@@ -59,7 +59,7 @@ if(N < 2*M):
     #print("Current N:", N)
     pass
   
-z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
+#z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
 
 if(z < z_min):
     print("Not enough propagation distance for proper sampling in the Fresnel transformation method.")
@@ -78,13 +78,13 @@ y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
 # Generating the aperture function. Uncomment the one you want to use
-#U_0 = circle(100, X_0, Y_0)
-#U_0 = rectangle(60, 60, X_0, Y_0)
+#U_0 = circle(20, X_0, Y_0)
+#U_0 = rectangle(20, 20, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-#U_0 = load_image('Images/Paco.png', N)  # Sometimes its .png and sometimes .jpg
-U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
+U_0 = load_image('Images\Corazon.png', N)  # Sometimes its .png and sometimes .jpg
+#U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
 
 
 
@@ -173,7 +173,7 @@ def plot_fields_log (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", tit
 
     #Output field
 
-    im1 = axes[1].imshow(I_log, cmap="inferno", extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
+    im1 = axes[1].imshow(I_z, cmap="inferno", extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -186,7 +186,7 @@ def plot_fields_log (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", tit
 
 
 """ Now we will graph the results """
-plot_fields(I_0, I_log, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
+plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
 
 
 
