@@ -90,7 +90,7 @@ def plot_fields(Mask, Intensity_Propagated_Field, x, y, x_p, y_p, Cut_Factor, ti
     Cut_Factor = (Cut_Factor / 100)
 
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="inferno", extent=[x_p[0], x_p[-1], y_p[0], y_p[-1]])
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="inferno", extent=[x_p[0], x_p[-1], y_p[0], y_p[-1]], vmax = np.max(Intensity_Propagated_Field)*Cut_Factor)
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
