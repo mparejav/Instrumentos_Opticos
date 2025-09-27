@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from PIL import Image   
 from Masks import *
 from scipy import special
+from scipy import integrate
+from scipy.special import fresnel
+from scipy.integrate import quad_vec
+from scipy.signal import correlate2d
 
 #Dummy code to try to generate the difraction pattern using The Fresnel transformation method
 
@@ -11,8 +15,8 @@ from scipy import special
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the spherical phase input term
 3. Calculate U'' [n,m,z] with FFT 
 4. Calculate U [n,m,z] adding the spherical phase output terms
-5. Re organize U [n,m,z] using shift
-6. Calculate the intensity to each field U_0 and U_z
+5. Calculate the intensity to each field U_0 and U_z
+6. Functions for analytical solutions
 """
 
 # Light parameters
@@ -26,17 +30,15 @@ L_0 = N * Δ_0  # um. Physical size of the sensor grid (Emm...) ~ 5 mm
 print("Physical size of the grid L:", L_0, "um")
 
 
-
 """
-Solo descomentar para el ejercicio de la imagen de Paco
+This parameters can be changed if we want to simulate the Paco image field (our transmitance function)
 """
 #L_0 = 500 # um. Physical size of the sensor grid for paco image
 #Δ_0 = L_0 / N  # um. Sampling interval in the spatial domain
 
 
-
 # Setup parameters
-z = 20000 # um. Propagation distance
+z = 2000000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
@@ -52,15 +54,9 @@ Cut_Factor = 90 # % Porcentage cap graph
 # Talbot parameters
 lines_per_mm = 10  # Ronchi grating parameter
 m = 1  # Talbot length iterator
+#z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
 
 # Constraints from sampling theorems
-if(N < 2*M):
-    #print("Warning: Increase number of samples N")
-    #print("Current M:", M)
-    #print("Current N:", N)
-    pass
-  
-#z = Talbot_length(lines_per_mm, m)  # Calculate and print Talbot length
 
 if(z < z_min):
     print("Not enough propagation distance for proper sampling in the Fresnel transformation method.")
@@ -78,21 +74,18 @@ x_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
-
-
-radius = 8 #um. Radius of the circle for the aperture function
-
+radius = 20 #um. Radius of the circle for the aperture function
+length = 10 #um. Length of the rectangle for the aperture function
 
 # Generating the aperture function. Uncomment the one you want to use
-U_0 = circle(radius, X_0, Y_0)
-#U_0 = rectangle(20, 20, X_0, Y_0)
+
+#U_0 = circle(radius, X_0, Y_0)
+U_0 = rectangle(length, length, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-#U_0 = load_image('Images\Corazon.png', N)  # Sometimes its .png and sometimes .jpg
+#U_0 = load_image('Images\Paco.png', N)  # Sometimes its .png and sometimes .jpg
 #U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
-
-
 
 """
 2. Calculate U' [n,m,0], using the function U [n,m,0] and multipling it with the parabolic phases term
@@ -105,25 +98,6 @@ U_1 = U_0 * SphericalInput
 """
 3. Calculate U'' [n,m,z] with FFT 
 """
-"""
-Parameters in fft2:
-----------------------
-a : array_like
-    Input array, can be complex.
-    
-s : sequence of ints, optional
-- `s` sets the number of points that the FFT will have along each axis.
-- If `s` is smaller than the input size: the input is cropped, reducing the array length.
-- If `s` is larger than the input size: the input is zero-padded, increasing the array length.
-- If `s` is None: the FFT uses the original input shape (no cropping or padding).
-
-Conceptual link:
-- Zero-padding in the spatial domain (larger `s`) leads to finer sampling in the frequency domain,
-  i.e. a smaller frequency spacing Δf = 1/L.
-- Cropping (smaller `s`) discards part of the input and broadens the frequency spacing.
-- The choice of `s` therefore directly controls the spectral resolution and should be consistent
-  with the physical grid definition (L = N·Δx).
-"""
 
 # We are calculating the fft for U_1
 U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
@@ -135,7 +109,7 @@ U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
 x_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 y_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_1,Y_1 = np.meshgrid (x_1, y_1)
-# Creating the radial coordinates
+# Creating the radial coordinates that will be used for the Jinc pattern
 R = np.sqrt(X_1**2 + Y_1**2)
 
 #We create the spherical phase output terms
@@ -145,62 +119,87 @@ SphericalOutput =(np.exp(1j*k*z)/(1j*λ*z))*np.exp((1j*k/(2*z))*((X_1)**2+ (Y_1)
 U_z = SphericalOutput * U_2
 
 """
--> 5.) Calculate I[n,m,z] - the intensity at distance z
+5. Calculate I[n,m,z] - the intensity at distance z
 """ 
 I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
 
 I_0 = np.abs(U_0)**2  # Intensity at z = 0   
   
-# Is best to use the same kind of graph in both aproximations, for now ill let it there
+"""
+6. Functions for analytical solutions
+"""
 
-#This is for get a logaritmic graphics of output field's intensity
-epsilon = 1e-6  # para evitar log(0)
-I_log = np.log10(I_z + epsilon)
-  
-#Now we are going to generate the function for Jinc pattern
-arg = k*radius*R/R.max()
+"""
+In this part we are creating the anaytical solution for the circular aperture using the Jinc function
+"""
 
-U_Jinc = np.where(R == 0, 1.0, 2*special.j1(arg)/(arg))
+#Function for generate the analytical solution of the circular aperture
+def U_of_r(r):
+    # we are integreting from 0 to the radius of the aperture
+    def integrand(rho, r):
+        return rho * np.exp(1j * k * rho**2 / (2*z)) * special.j0(k * r * rho / z)
 
-""" Now we will try to graph the results """
+    #We are using quad_vec to integrate the function
+    val, _ = quad_vec(lambda rho: integrand(rho, r), 0, radius, limit=200)
 
-def plot_fields_log (I_0, I_z, x_0, y_0,x_1,y_1, title0 = "Input field I_0", titlez = "Output field I_z"):
-    """
-    Plot input field I_0 and propagated output field Uz.
-    Both fields are shown as intensities |U|^2 for visualization.
-    The axes are set according to the physical coordinates (x, y).
-    """
+    prefac = (2*np.pi * np.exp(1j*k*z)) / (1j * λ * z) * np.exp(1j * k * r**2 / (2*z))
+    return prefac * val
 
-    fig, axes = plt.subplots (1,2,figsize = (10,4))
+"""
+In this part we are creating the analytical solution for the square aperture using the Sinc function
+The input field is composed by the product of two rect functions, one in x and other in y
+The Fresnel transform is linear, so we can calculate the Fresnel transform of each rect function 
+and then multiply them to get the final result
+"""
+def I_axis(coord, a, z, k):
+    # Factor común
+    sqrt_term = np.sqrt(k/(2*z))
+    # Definir u+ y u-
+    u_plus  = np.sqrt(2/np.pi) * (sqrt_term*a + sqrt_term*coord)
+    u_minus = np.sqrt(2/np.pi) * (-sqrt_term*a + sqrt_term*coord)
 
-    #Input field
-    im0 = axes[0].imshow(I_0, cmap ="inferno",extent= [x_0[0], x_0[-1],y_0[0], y_0[-1]])
-    axes[0].set_title(title0)
-    axes[0].set_xlabel ("x [um]")
-    axes[0].set_ylabel ("y [um]")
-    plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
+    # Fresnel en u+ y u-
+    C_plus, S_plus = fresnel(u_plus)
+    C_minus, S_minus = fresnel(u_minus)
 
-    #Output field
+    deltaC = C_plus - C_minus
+    deltaS = S_plus - S_minus
 
-    im1 = axes[1].imshow(I_z, cmap="inferno", extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
-    axes[1].set_title(titlez)
-    axes[1].set_xlabel("x [um]")
-    axes[1].set_ylabel("y [um]")
-    plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
+    prefac = np.sqrt(np.pi*z/k) * np.exp(-1j*k*coord**2/(2*z))
+    return prefac * (deltaC + 1j*deltaS)
 
-    plt.tight_layout()
-    plt.show()
+"""
+We will call these functions just when it is needed
+"""
 
-#plot_fields_log(I_0, I_z, x_0, y_0,x_1,y_1, title0="Input Field", titlez="Propagated Field")
+U_x = I_axis(X_1, length/2, z, k)
+U_y = I_axis(Y_1, length/2, z, k)
+U_sinc = (np.exp(1j*k*z) / (1j*λ*z)) * np.exp(1j*k*(X_1**2+Y_1**2)/(2*z)) * U_x * U_y
+I_sinc = np.abs(U_sinc)**2
+I_sinc = I_sinc / I_sinc.max() * I_z.max()  # Normalizing to the same max value as I_z
+
+
+
+#U_Jinc = U_of_r(R)
+#I_Jinc = np.abs(U_Jinc)**2
+#I_Jinc = I_Jinc / I_Jinc.max() * I_z.max()  # Normalizing to the same max value as I_z
+
+"""
+We will calculate the correlation between the numerical and analytical solutions
+"""
+#This is for the circular aperture
+#corr_Jinc = correlate2d(I_z, I_Jinc, mode='same')
+#print("Max correlation Jinc:", np.max(corr_Jinc)) 
+
+
+#This is for the square aperture
+#corr_sinc = correlate2d(I_z, I_sinc, mode='same')
+#print("Max correlation Sinc:", np.max(corr_sinc))
+          
 
 
 """ Now we will graph the results """
 plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
-
-
-
-
-
 
 print("Done")
     
