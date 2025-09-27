@@ -141,7 +141,7 @@ In this part we are creating the anaytical solution for the circular aperture us
 
 #Function for generate the analytical solution of the circular aperture
 def U_of_r(r):
-    # we are integreting from 0 to the radius of the aperture
+    # we are integrating from 0 to the radius of the aperture
     def integrand(rho, r):
         return rho * np.exp(1j * k * rho**2 / (2*z)) * special.j0(k * r * rho / z)
 
@@ -158,19 +158,21 @@ The Fresnel transform is linear, so we can calculate the Fresnel transform of ea
 and then multiply them to get the final result
 """
 def I_axis(coord, a, z, k):
-    # Factor común
+    # Computing the argument for the Fresnel integrals
     sqrt_term = np.sqrt(k/(2*z))
-    # Definir u+ y u-
+    # Calculating u+ and u-
     u_plus  = np.sqrt(2/np.pi) * (sqrt_term*a + sqrt_term*coord)
     u_minus = np.sqrt(2/np.pi) * (-sqrt_term*a + sqrt_term*coord)
 
     # Fresnel en u+ y u-
     C_plus, S_plus = fresnel(u_plus)
     C_minus, S_minus = fresnel(u_minus)
-
+    
+    # Calculating the differences
     deltaC = C_plus - C_minus
     deltaS = S_plus - S_minus
 
+    # Prefactor
     prefac = np.sqrt(np.pi*z/k) * np.exp(-1j*k*coord**2/(2*z))
     return prefac * (deltaC + 1j*deltaS)
 
