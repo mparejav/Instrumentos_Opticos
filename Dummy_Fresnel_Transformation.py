@@ -38,7 +38,7 @@ This parameters can be changed if we want to simulate the Paco image field (our 
 
 
 # Setup parameters
-z = 2000000 # um. Propagation distance
+z = 1500000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
@@ -106,9 +106,14 @@ U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
 4. Calculate U [n,m,z] adding the spherical phase output terms
 """
 #We creat the coordinates for our propagated field
-x_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
-y_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
-X_1,Y_1 = np.meshgrid (x_1, y_1)
+fx = np.fft.fftshift(np.fft.fftfreq(N, d=Δ_0))          # cycles / um
+fy = fx.copy()
+FX, FY = np.meshgrid(fx, fy)
+
+x_1 = λ * z * fx                         # um
+y_1 = λ * z * fy                         # um
+X_1, Y_1 = np.meshgrid(x_1, y_1)  
+
 # Creating the radial coordinates that will be used for the Jinc pattern
 R = np.sqrt(X_1**2 + Y_1**2)
 
@@ -122,6 +127,7 @@ U_z = SphericalOutput * U_2
 5. Calculate I[n,m,z] - the intensity at distance z
 """ 
 I_z = np.abs(U_z)**2  # Intensity is the magnitude squared of the field
+I_z = I_z / I_z.max()  # Normalizing to its max value
 
 I_0 = np.abs(U_0)**2  # Intensity at z = 0   
   
@@ -176,7 +182,7 @@ U_x = I_axis(X_1, length/2, z, k)
 U_y = I_axis(Y_1, length/2, z, k)
 U_sinc = (np.exp(1j*k*z) / (1j*λ*z)) * np.exp(1j*k*(X_1**2+Y_1**2)/(2*z)) * U_x * U_y
 I_sinc = np.abs(U_sinc)**2
-I_sinc = I_sinc / I_sinc.max() * I_z.max()  # Normalizing to the same max value as I_z
+I_sinc = I_sinc / I_sinc.max()
 
 
 
