@@ -10,7 +10,6 @@ All masks are generated as a square matrix of size size x size.
 Conventional figures are plotted following symmetrical geometries centered at the origin (0,0).
 All dimensions are specified in microns (um).
 '''
-
 # Function that generates a circular aperture centered in the grid.
 def circle(radius_um, X, Y):
     mask = np.where(X**2 + Y**2 <= radius_um**2, 1, 0)
@@ -29,25 +28,6 @@ def vertical_slit(width_um, X, Y):
 # Function that generates a horizontal slit centered.
 def horizontal_slit(width_um, X, Y):
     mask = np.where(np.abs(Y) <= width_um // 2, 1, 0)
-    return mask
-
-"""
-Function that generates a cross-shaped mask centered, with independent thicknesses in vertical and horizontal.
-The cross is formed by two rectangles: one horizontal (with thickness 'e_um') and one vertical (with thickness 't_um').
-The dimensions are defined in microns (um).
-"""
-def cross_mask(L1_um, L2_um, h1_um, h2_um, t_um, e_um, Number_of_Samples, X, Y):
-
-    mask = np.zeros((Number_of_Samples, Number_of_Samples))
-
-    # Horizontal arm of the cross
-    cond_h = (np.abs(Y) <= e_um/2) & (X >= -L1_um - t_um/2) & (X <= L2_um + t_um/2)
-    mask[cond_h] = 1
-
-    # Vertical arm of the cross
-    cond_v = (np.abs(X) <= t_um/2) & (Y >= -h2_um - e_um/2) & (Y <= h1_um + e_um/2)
-    mask[cond_v] = 1
-
     return mask
 
 """
@@ -98,8 +78,56 @@ def plot_fields(Mask, Intensity_Propagated_Field, x, y, x_p, y_p, Cut_Factor, ti
   
     plt.tight_layout()
     plt.show()
-    
 
+"""
+This function plots an aperture and its correspondent diffraction pattern.
+The axes are set according to the physical coordinates (x, y).
+Requires as inputs two matrix: the first argument is the binary array asociated to the mask; the second one is the array for
+the Intensity field of a difraction pattern propagated a distance z; the third and fourth are the spatial variables; fifth is the
+"cut factor" as a decimal, this is a porcentage value that caps the maximum value so the funtion reduces its contrast.
+"""
+def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y, contrast_limit, title_input = 'Aperture', title_output = 'Propagated Intensity Field'):
+        
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    # Input field
+    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]])
+    axes[0].set_title(title_input)
+    axes[0].set_xlabel("x [um]")
+    axes[0].set_ylabel("y [um]")
+    plt.colorbar(im0, ax=axes[0], fraction = 0.046, pad = 0.04)
+
+    """
+    According to the discrete formulation the sampling intervals satisfy:
+
+        Δ · Δf = 1 / N 
+
+    where Δ is the spatial sampling interval and Δf is the spectral sampling interval.
+    When we propagate the field using the Angular spectrum method, the process is:
+
+        1) FFT: U(x,y,0)  →  A(fx,fy,0)
+        2) Multiply by transfer function: A(fx,fy,0) → A(fx,fy,z)
+        3) IFFT: A(fx,fy,z) → U(x,y,z)
+
+    Both the FFT and the IFFT use the same number of samples (N),
+    and the same relation Δ · Δf = 1/N. Therefore, the spatial sampling interval
+    after propagation is preserved:
+
+        Δ_out = Δ_in
+
+    This means that the physical coordinate grids of the output plane are the same
+    as those of the input plane.
+    """
+    # Output field
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
+    axes[1].set_title(title_output)
+    axes[1].set_xlabel("x [um]")
+    axes[1].set_ylabel("y [um]")
+    plt.colorbar(im1, ax=axes[1], fraction = 0.046, pad = 0.04)
+
+    plt.tight_layout()
+    plt.show()
+ 
 """
 Generates a Ronchi ruling mask.
 
@@ -122,16 +150,16 @@ def Ronchi_mask(lines_per_mm, X, Y):
     
     return mask
 
-def Talbot_length(lines_per_mm, n):
-    """Calculate the Talbot length for a given Ronchi grating.
+"""Calculate the Talbot length for a given Ronchi grating.
 
-    Args:
-        lines_per_mm: Number of lines per mm (spatial frequency).
-        n: Iterator for Talbot length calculation.
-        
-    Returns:
-        Propagation_Distance_um : Calculated Talbot length in microns.
-    """
+Args:
+    lines_per_mm: Number of lines per mm (spatial frequency).
+    n: Iterator for Talbot length calculation.
+    
+Returns:
+    Propagation_Distance_um : Calculated Talbot length in microns.
+"""
+def Talbot_length(lines_per_mm, n):
 
     λ = 0.633  # um. Wavelength of the light source (He-Ne laser)
 
@@ -139,7 +167,7 @@ def Talbot_length(lines_per_mm, n):
     period_um = 1000 / lines_per_mm   # um per line pair (bright+dark)
 
     # Calculates Talbot length
-    talbot_length = (n * 2*period_um**2) / λ
+    talbot_length = (n * 2 * period_um**2) / λ
     
     print(f"Talbot length for {lines_per_mm} lines/mm: {talbot_length:.2f} um")
     

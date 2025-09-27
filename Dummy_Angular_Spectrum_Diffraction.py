@@ -32,9 +32,11 @@ print("Physical size of the grid L:", L, "um")
 
 # Setup parameters
 z = 20000 # um. Propagation distance 
+z_mm = z / 1000 # mm
+print("Propagation distance set at:", z_mm, "mm")
 
 # Sampling parameters
-Δf = 1 / (Δ*N)  # um^-1. Sampling interval in the frequency domain. Spec    tral discretization ???
+Δf = 1 / (Δ*N)  # um^-1. Sampling interval in the frequency domain. Spectral discretization 
 M = 1/(λ*Δf) # Number of samples to represent the signal per axis 
 
 # Conditions to asure proper sampling
@@ -47,13 +49,8 @@ Cut_Factor = 30 # % Porcentage cap graph
 
 if(z > z_max):
     print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
-    print("z_max = ", z_max, "um")
     Propagation_Distance = z_max
     print("Propagation distance set at:", Propagation_Distance)
-
-if(f_max > f_Nyquist):
-    #print("Warning Nyquist condition not met")
-    pass
 
 """
 -> 1.) Take, or generate, U[n,m,0] - the input field at z=0
@@ -63,12 +60,12 @@ x = np.linspace(-L/2, L/2, N, endpoint = False)
 y = np.linspace(-L/2, L/2, N, endpoint = False)
 X, Y = np.meshgrid(x, y)
 
-#U_0 = circle(100, X, Y)
+U_0 = circle(50, X, Y)
 #U_0 = rectangle(60, 60, X, Y)
 #U_0 = vertical_slit(40, X, Y)
 #U_0 = horizontal_slit(40, X, Y)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-U_0 = load_image('Images/Rochi_square.png', N)
+#U_0 = load_image('Images/Rochi_square.png', N)
 
 """
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT
@@ -94,23 +91,30 @@ Conceptual link:
   with the physical grid definition (L = N·Δx).
 """
 
-# For now, we will generate a padding to ensure our DFT doesnt have aliasing
+"""
+Firstly, we try to add a padding factor to avoid aliasing effects due to circular convolution, however
+we notice that using the np functions for FFT and similars the padding was not necessary. The results 
+with a padding factor of 1 (no padding) were good enough.
+"""
+padding_factor = 1          # Increase this factor to increase padding
+N_padded = N * padding_factor  # New size for FFT with padding. Digital padding.
 
-padding_factor = 1 # Increase this factor to increase padding
-N_fft = N * padding_factor  # New size for FFT with padding. Digital padding.
-
-# Calculate the FFT of the input field
-A_0 = (Δ**2) * np.fft.fft2(U_0, s=(N_fft, N_fft))  # FFT2 computes the 2-dimensional discrete Fourier Transform
+# FFT2 computes the bidimensional Fast Fourier Transform
+A_0 = (Δ**2) * np.fft.fft2(U_0, s=(N_padded, N_padded))  # second parameter of fft2 is the size of the FFT (Related with padding, look comment above)
 
 """
 # -> 3.) Calculate A[p,q,z] - the angular spectrum at distance z using the Transfer Function
 """
 
-A_z = np.zeros((N_fft, N_fft), dtype = np.complex128) # Initialize A[p,q,z]. Angular spectrum at distance z
+A_z = np.zeros((N_padded, N_padded), dtype = np.complex128) # Initialize A[p,q,z]. Angular spectrum at distance z
 
+"""
+Due to the fact that we are creating the meshgrid for the frequencies using the np.fft.fftfreq function 
+theres no need to manually shift the zero frequency component.
+"""
 # Arrays of spatial frequencies 
-fx = np.fft.fftfreq(N_fft, d = Δ)   # frequencies along x
-fy = np.fft.fftfreq(N_fft, d = Δ)   # frequencies along y
+fx = np.fft.fftfreq(N_padded, d = Δ)   # frequencies along x ;     d : sample spacing in the ORIGINAL DOMAIN (Δx)
+fy = np.fft.fftfreq(N_padded, d = Δ)   # frequencies along y
 
 """
 np.fft.fftfreq:
@@ -146,7 +150,7 @@ Transfer_Function = np.zeros_like(FX, dtype = np.complex128)
 Transfer_Function[mask] = np.exp(1j * z * k * np.sqrt(arg[mask]))
 
 # Calculate A[p,q,z] using the Transfer Function
-A_z = A_0 * Transfer_Function # Element-wise multiplication
+A_z = A_0 * Transfer_Function # Element-wise product
 
 """
 -> 4.) Calculate U[n,m,z] - the output field at distance z using inverse FFT
@@ -160,16 +164,10 @@ U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at dis
 
 I_z = np.abs(U_z)**2  
 
-epsilon = 1e-6  # Small constant to avoid log(0)
-
-I_log = np.log10(I_z + epsilon)  # Logarithmic scale to enhance visibility
-
 """
 Graph results   
 """
 
-espectro = np.fft.fftshift(np.log(np.abs(A_z)+1))
+# espectro = np.fft.fftshift(np.log(np.abs(A_z)+1)) --> Proving something to analyze aliasing
 
-plot_fields(U_0, I_z, x, y, x, y, Cut_Factor, title0 = "Transmitance", titlez = "Intensity of propagated field")
-
-print("Done")
+Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.8, title_input = "Transmitance", title_output = "Intensity of propagated field")
