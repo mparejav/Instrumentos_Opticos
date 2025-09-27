@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image   
 from Masks import *
+from scipy import special
 
 #Dummy code to try to generate the difraction pattern using The Fresnel transformation method
 
@@ -29,13 +30,13 @@ print("Physical size of the grid L:", L_0, "um")
 """
 Solo descomentar para el ejercicio de la imagen de Paco
 """
-L_0 = 500 # um. Physical size of the sensor grid for paco image
-Δ_0 = L_0 / N  # um. Sampling interval in the spatial domain
+#L_0 = 500 # um. Physical size of the sensor grid for paco image
+#Δ_0 = L_0 / N  # um. Sampling interval in the spatial domain
 
 
 
 # Setup parameters
-z = 10000 # um. Propagation distance
+z = 20000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
@@ -43,10 +44,10 @@ M = 1 / (λ * Δ_f) # Number of samples to represent the signal per axis
 z_min = (N * Δ_0**2) / λ #Littlest distance z that can be well simulated with TF
 f_Nyquist = 1 / (2 * Δ_0)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 Δ_1 = λ *z/N*Δ_0  # um. Sampling interval in the output field           
-L_1 = N * Δ_1 #um. Physical size of the grid in the output field      
+L_1 = N * Δ_1 #um. Physical size of the grid in the output field    
 
 # Graph parameters
-Cut_Factor = 100 # % Porcentage cap graph
+Cut_Factor = 90 # % Porcentage cap graph
 
 # Talbot parameters
 lines_per_mm = 10  # Ronchi grating parameter
@@ -77,13 +78,18 @@ x_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
+
+
+radius = 8 #um. Radius of the circle for the aperture function
+
+
 # Generating the aperture function. Uncomment the one you want to use
-#U_0 = circle(20, X_0, Y_0)
+U_0 = circle(radius, X_0, Y_0)
 #U_0 = rectangle(20, 20, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-U_0 = load_image('Images\Corazon.png', N)  # Sometimes its .png and sometimes .jpg
+#U_0 = load_image('Images\Corazon.png', N)  # Sometimes its .png and sometimes .jpg
 #U_0 = Ronchi_mask(lines_per_mm, X_0, Y_0)  # Ronchi grating 
 
 
@@ -126,9 +132,11 @@ U_2 = np.fft.fftshift((Δ_0**2)*np.fft.fft2(U_1))
 4. Calculate U [n,m,z] adding the spherical phase output terms
 """
 #We creat the coordinates for our propagated field
-x_1 = np.linspace (-L_1/2, L_1/2, N, endpoint = False)
-y_1 = np.linspace (-L_1/2, L_1/2, N, endpoint = False)
+x_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
+y_1 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_1,Y_1 = np.meshgrid (x_1, y_1)
+# Creating the radial coordinates
+R = np.sqrt(X_1**2 + Y_1**2)
 
 #We create the spherical phase output terms
 SphericalOutput =(np.exp(1j*k*z)/(1j*λ*z))*np.exp((1j*k/(2*z))*((X_1)**2+ (Y_1)**2))
@@ -149,9 +157,10 @@ I_0 = np.abs(U_0)**2  # Intensity at z = 0
 epsilon = 1e-6  # para evitar log(0)
 I_log = np.log10(I_z + epsilon)
   
+#Now we are going to generate the function for Jinc pattern
+arg = k*radius*R/R.max()
 
-
-###### Verification of sampling theorems ######
+U_Jinc = np.where(R == 0, 1.0, 2*special.j1(arg)/(arg))
 
 """ Now we will try to graph the results """
 
