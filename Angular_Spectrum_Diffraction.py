@@ -1,8 +1,7 @@
 import numpy as np    
-from Masks import *
-from analyticalSln import *
+from Miscelanea import *
 
-# Dummy (ya no es dummy, pero quedará así) code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
+# Code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
 # Will try to emulate the structure given in class
 
 """
@@ -57,10 +56,10 @@ print (z_max, "um is the maximum propagation distance for proper sampling in the
 x = np.linspace(-L/2, L/2, N, endpoint = False)
 y = np.linspace(-L/2, L/2, N, endpoint = False)
 X, Y = np.meshgrid(x, y)
-R = np.sqrt(X**2 + Y**2)  # Radial coordinate
 
 radius = 18 #um. Radius of the circle for the aperture function
 length = 60 #um. Length of the side of the square aperture function
+
 U_0 = circle(radius, X, Y)
 #U_0 = rectangle(length,length, X, Y)
 #U_0 = vertical_slit(40, X, Y)
@@ -165,31 +164,8 @@ U_z = (Δf**2) * np.fft.ifft2(A_z)  # Inverse FFT to get the output field at dis
 
 I_z = np.abs(U_z)**2  
 
-
-"""
-We will call these functions just when it is needed
-"""
-"""
-#This part is for the square aperture
-U_x = I_axis(X_1, length/2, z, k)
-U_y = I_axis(Y_1, length/2, z, k)
-U_sinc = (np.exp(1j*k*z) / (1j*λ*z)) * np.exp(1j*k*(X_1**2+Y_1**2)/(2*z)) * U_x * U_y
-I_sinc = np.abs(U_sinc)**2
-I_sinc = I_sinc / I_sinc.max()
-"""
-
-#This part is for the circular aperture
-U_Jinc = U_of_r(R)
-I_Jinc = np.abs(U_Jinc)**2
-I_Jinc = I_Jinc / I_Jinc.max()
-
-
-print ("The percentage of correlation is: ",calculate_correlation(I_z, I_Jinc), "%")
-
 """
 Graph results   
 """
 
-# espectro = np.fft.fftshift(np.log(np.abs(A_z)+1)) --> Proving something to analyze aliasing
-
-Graph_Mask_and_Field_Angular_Spectrum(U_0, I_Jinc, x, y, contrast_limit = 0.9, title_input = "Transmitance", title_output = "Intensity of propagated field")
+Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.9, title_input = "Transmitance", title_output = "Intensity of propagated field")

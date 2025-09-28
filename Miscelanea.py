@@ -246,8 +246,6 @@ def Talbot_length(lines_per_mm, n):
 
     return Propagation_Distance_um
 
-
-
 def Paco_mask(Number_of_Samples):
     
     L = 5800 # um. Physical size of the sensor grid for paco image

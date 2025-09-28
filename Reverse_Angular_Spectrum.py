@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from PIL import Image   
-from Masks import *
+from Miscelanea import *
 """
 This code determines the spatial structure of an unknown transmitance and the distance to the sensor in a reverse process
 using the Angular Spectrum Method.

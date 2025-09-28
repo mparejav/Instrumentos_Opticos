@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt  
-from Masks import *
-from analyticalSln import *
+from Miscelanea import *
+from Analytical_Comparation import *
 
 
 #Dummy code to try to generate the difraction pattern using The Fresnel transformation method

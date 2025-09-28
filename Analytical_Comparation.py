@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt  
-from Masks import *
+from Angular_Spectrum_Diffraction import *
+from Miscelanea import *
 from scipy import special
 from scipy.special import fresnel
 from scipy.integrate import quad_vec
@@ -9,11 +10,12 @@ from scipy.integrate import quad_vec
 Functions for analytical solutions
 """
 
+
+
 """
 In this part we are creating the anaytical solution for the circular aperture using the Jinc function
 """
-
-#Function for generate the analytical solution of the circular aperture
+#Function thats generates the analytical solution of the circular aperture
 def U_of_r(r,radius, z, λ,k):
     # we are integrating from 0 to the radius of the aperture
     def integrand(rho, r):
@@ -68,4 +70,39 @@ def calculate_correlation(A, B):
 
     return C * 100  # Return as percentage
 
-#Holaa
+
+"""
+We will call these functions just when it is needed
+"""
+"""
+#This part is for the square aperture
+U_x = I_axis(X_1, length/2, z, k)
+U_y = I_axis(Y_1, length/2, z, k)
+U_sinc = (np.exp(1j*k*z) / (1j*λ*z)) * np.exp(1j*k*(X_1**2+Y_1**2)/(2*z)) * U_x * U_y
+I_sinc = np.abs(U_sinc)**2
+I_sinc = I_sinc / I_sinc.max()
+"""
+
+"""
+This function graphs the comparison between the numerical (Angular Spectrum Method) and
+analytical solution for a circular aperture using the Jinc function.
+"""
+def Analitic_Comparation_Angular_Spectrum():
+
+    # Create physical coordinates centered at 0
+    x = np.linspace(-L/2, L/2, N, endpoint = False)
+    y = np.linspace(-L/2, L/2, N, endpoint = False)
+    X, Y = np.meshgrid(x, y)
+    R = np.sqrt(X**2 + Y**2)  # Radial coordinates
+    
+    #This part is for the circular aperture
+    U_Jinc = U_of_r(R, radius, z, λ, k)
+    I_Jinc = np.abs(U_Jinc)**2
+    I_Jinc_Norm = I_Jinc / I_Jinc.max()
+    
+    Graph_Mask_and_Field_Angular_Spectrum(I_z, I_Jinc_Norm, x, y, contrast_limit = 0.9, title_input = "Intensidad del campo propagado: Espectro angular", title_output = "Intensidad del campo propagado: Solución analítica")
+
+    print ("The percentage of correlation is: ",calculate_correlation(I_z, I_Jinc_Norm), "%")
+
+
+Analitic_Comparation_Angular_Spectrum()
