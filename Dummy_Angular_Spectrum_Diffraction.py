@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from PIL import Image   
 from Masks import *
 
-# Dummy code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
+# Dummy (ya no es dummy, pero quedará así) code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
 # Will try to emulate the structure given in class
 
 """
@@ -43,9 +43,6 @@ M = 1/(λ*Δf) # Number of samples to represent the signal per axis
 f_max = M*Δf  # um^-1. Maximum spatial frequency
 z_max = (N * Δ**2) / λ # um. Maximum propagation distance in which angular spectrum method is well sampled
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
-
-# Graph parameters
-Cut_Factor = 30 # % Porcentage cap graph
 
 if(z > z_max):
     print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
