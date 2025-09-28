@@ -49,3 +49,23 @@ def I_axis(coord, a, z, k):
     # Prefactor
     prefac = np.sqrt(np.pi*z/k) * np.exp(-1j*k*coord**2/(2*z))
     return prefac * (deltaC + 1j*deltaS)
+
+"""
+We will calculate the correlation between the numerical and analytical solutions
+We will use the Teorem of Convolution - correlation in the Fourier space
+"""
+def calculate_correlation(A, B):
+    Fourier_Uz = np.fft.fft2(A)
+    Fourier_U_sinc = np.fft.fft2(B)
+    #Map of correlation
+    correlation = np.fft.fftshift(np.fft.ifft2(Fourier_Uz * np.conj(Fourier_U_sinc)))
+   
+    # Normalization factor
+    norm_factor = np.sqrt(np.sum(np.abs(A)**2) * np.sum(np.abs(B)**2))
+
+    # Maximum correlation value normalized
+    C = np.max(np.abs(correlation)) / norm_factor
+
+    return C * 100  # Return as percentage
+
+#Holaa
