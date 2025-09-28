@@ -1,8 +1,5 @@
 import numpy as np    
 from Masks import *
-from scipy import special
-from scipy.special import fresnel
-from scipy.integrate import quad_vec
 from analyticalSln import *
 
 # Dummy (ya no es dummy, pero quedará así) code to generate the diffraction pattern using the Angular Spectrum Method of a circular aperture
