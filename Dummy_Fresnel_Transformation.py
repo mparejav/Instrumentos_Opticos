@@ -194,21 +194,26 @@ I_sinc = I_sinc / I_sinc.max()
 
 """
 We will calculate the correlation between the numerical and analytical solutions
+We will use the Teorem of Convolution - correlation in the Fourier space
 """
-#This is for the circular aperture
-#corr_Jinc = correlate2d(I_z, I_Jinc, mode='same')
-#print("Max correlation Jinc:", np.max(corr_Jinc)) 
+def calculate_correlation(A, B):
+    Fourier_Uz = np.fft.fft2(A)
+    Fourier_U_sinc = np.fft.fft2(B)
+    #Map of correlation
+    correlation = np.fft.fftshift(np.fft.ifft2(Fourier_Uz * np.conj(Fourier_U_sinc)))
+   
+    # Normalización usando la energía de cada arreglo
+    norm_factor = np.sqrt(np.sum(np.abs(A)**2) * np.sum(np.abs(B)**2))
 
+    # Tomar el máximo del mapa correlación (pico)
+    C = np.max(np.abs(correlation)) / norm_factor
 
-#This is for the square aperture
-#corr_sinc = correlate2d(I_z, I_sinc, mode='same')
-#print("Max correlation Sinc:", np.max(corr_sinc))
-          
+    return C * 100
 
+print ("The percentage of correlation is: ",calculate_correlation(I_z, I_sinc))
 
 """ Now we will graph the results """
-plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
-
+#plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
 print("Done")
     
 

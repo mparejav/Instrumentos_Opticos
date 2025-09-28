@@ -161,6 +161,42 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
 
     plt.tight_layout()
     plt.show()
+    
+def plot_correlation(I_0,I_numerical, I_analytical,correlation_intensity, x_0, y_0, x_1,y_1, title = "Input field", title0 = "Numerical Solution", title1 = "Analytical Solution", title2 = "Correlation Intensity"):
+   
+    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+    
+    #Plottting the input field
+    im00 = axes[0,0].imshow(I_0, cmap='inferno', extent=[x_0[0], x_0[-1], y_0[0], y_0[-1]])
+    axes[0,0].set_title(title) 
+    axes[0,0].set_xlabel('x [um]')
+    axes[0,0].set_ylabel('y [um]')
+    plt.colorbar(im00, ax=axes[0,0], fraction = 0.046, pad = 0.04)
+    
+    #Plotting the numerical solution
+    im01 = axes[0,1].imshow(I_numerical, cmap='inferno', extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
+    axes[0,1].set_title(title0)
+    axes[0,1].set_xlabel('x [um]')
+    axes[0,1].set_ylabel('y [um]')
+    plt.colorbar(im01, ax=axes[0,1], fraction = 0.046, pad = 0.04)
+    
+    #Plotting the analytical solution
+    im10 = axes[1,0].imshow(I_analytical, cmap='inferno', extent=[x_1[0], x_1[-1], y_1[0], y_1[-1]])
+    axes[1,0].set_title(title1)
+    axes[1,0].set_xlabel('x [um]')
+    axes[1,0].set_ylabel('y [um]')
+    plt.colorbar(im10, ax=axes[1,0], fraction = 0.046, pad = 0.04)
+
+    
+    # Plotting the correlation intensity
+    im11 = axes[1,1].imshow(correlation_intensity, cmap='inferno', extent=[x_0[0], x_0[-1], y_0[0], y_0[-1]])
+    axes[1,1].set_title(title2)
+    axes[1,1].set_xlabel('x [um]')
+    axes[1,1].set_ylabel('y [um]')
+    plt.colorbar(im11, ax=axes[1,1], fraction = 0.046, pad = 0.04)
+    plt.tight_layout()
+    plt.show()
+  
  
 """
 Generates a Ronchi ruling mask.
