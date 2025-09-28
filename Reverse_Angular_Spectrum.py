@@ -15,7 +15,7 @@ k = 2 * np.pi / λ  # um^-1. Wavenumber
 Δ = 5 # um. Sampling interval in the spatial domain. 
 
 # Setup parameters
-z = 77000 # um. Propagation distance 
+z = 87500 # um. Propagation distance (Transmitance to Sensor)
 z_mm = z / 1000 # mm
 print("Propagation distance set at:", z_mm, "mm")
 
@@ -25,14 +25,21 @@ print("Propagation distance set at:", z_mm, "mm")
 #f_max = M*Δf  # um^-1. Maximum spatial frequency
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
-
 """
 1.) First, we need the propagated field at distance z. However, the sensor only measures intensity, which is the square of the absolute value of the field.
 This fact makes not posible to recover the original input field, since the phase information is lost. 
 We can recover some information about the input field, but not all of it. This probably will affect the quality of the result.  
 """
+# ------- Distance_Source-Transmitance ---- Distance_Transmitance-Sensor
+# Path 1:        38 mm                           77 mm
+# Path 2:        38 mm                           111 mm
+# Path 3:        38 mm                           156 mm
+# Path 4:        46 mm                           109 mm
+# Path 5:        152 mm                          109 mm
 
-I_z = Intensity_Field_Diffraction_Pattern('Images/Trans_Cam_77mm_Luz_Trans_1_1_2pulgada.png')
+path = select_image_path(option = 4)
+
+I_z = Intensity_Field_Diffraction_Pattern(path)
 
 U_z = np.sqrt(I_z) # We assume this is the field at distance z. Phase term is cero.
 

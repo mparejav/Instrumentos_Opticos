@@ -125,7 +125,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Input field
-    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
+    im0 = axes[0].imshow(Mask, cmap = "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
     axes[0].set_title(title_input)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
@@ -153,7 +153,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     as those of the input plane.
     """
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
     axes[1].set_title(title_output)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -223,3 +223,18 @@ def Paco_mask(Number_of_Samples):
     Pixel_Size = L / Number_of_Samples  # um. Sampling interval in the spatial domain. (Square pixel size)
 
     return X, Y, Pixel_Size
+
+# Switch case structure for image path selection in Reverse_Angular_Spectrum.py
+def select_image_path(option):
+    switcher = {
+        1: 'Images/Trans_Cam_77mm_Luz_Trans_1_1_2pulgada.png',
+        2: 'Images/Trans_Cam_111mm_Luz_Trans_1_1_2pulgada.png',
+        3: 'Images/Trans_Cam_156mm_Luz_Trans_1_1_2pulgada.png',
+        4: 'Images/Trans_Cam_109mm_Luz_Trans_46mm.png',
+        5: 'Images/Trans_Cam_109mm_Luz_Trans_6_pulgada.png'
+        }
+    return switcher.get(option, "Invalid option")
+
+path = select_image_path(1)
+
+print(path)
