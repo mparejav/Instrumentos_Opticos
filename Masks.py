@@ -45,6 +45,40 @@ def load_image(image_path, Number_of_Samples):
     mask = np.where(img_array > 128, 1, 0)
     return mask
 
+
+def Intensity_Field_Diffraction_Pattern(image_path):
+    """
+    Load a 4000x3000 pixel image from a 5 μm/pixel sensor and returns it as 
+    a grayscale array.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to the grayscale image (expected 4000x3000 pixels from 5 μm/pixel sensor). Not completely sure of pixel size.
+
+    Returns
+    -------
+    mask : ndarray (dtype float64)
+        Grayscale transmittance (0 to 1) with shape (3000, 4000).
+    pixel_size : float
+        Physical pixel size in micrometers (5.0 μm).
+    """
+
+    # Load image at its native resolution
+    img = Image.open(image_path).convert('L')  # grayscale (0–255)
+    img_array = np.array(img)  # shape will be (3000, 4000) for the expected image
+    
+    """
+    As we are working with a known image theres no need to resize it. Every pixel in the original image will be an element of the 
+    array. This is highly demanding for processing, but it preserves all the information of the image. The code (Reverse_Angular_Spectrum.py) 
+    assumes the known parameters.
+    """
+    # Normalize grayscale values to [0,1] → transmittance mask
+    Intensity_field = img_array.astype(float) / 255.0  
+
+    return Intensity_field
+
+
 """"
 This function plots an aperture and its correspondent diffraction pattern.
 The axes are set according to the physical coordinates (x, y).
@@ -91,7 +125,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Input field
-    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]])
+    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
     axes[0].set_title(title_input)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
@@ -175,6 +209,8 @@ def Talbot_length(lines_per_mm, n):
     print(f"Propagation distance set at: {Propagation_Distance_um} um")
 
     return Propagation_Distance_um
+
+
 
 def Paco_mask(Number_of_Samples):
     
