@@ -125,7 +125,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Input field
-    im0 = axes[0].imshow(Mask, cmap = "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
+    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
     axes[0].set_title(title_input)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
@@ -153,7 +153,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     as those of the input plane.
     """
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
     axes[1].set_title(title_output)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -164,7 +164,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     
 def plot_correlation(I_0,I_numerical, I_analytical,correlation_intensity, x_0, y_0, x_1,y_1, title = "Input field", title0 = "Numerical Solution", title1 = "Analytical Solution", title2 = "Correlation Intensity"):
    
-    fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     
     #Plottting the input field
     im00 = axes[0,0].imshow(I_0, cmap='inferno', extent=[x_0[0], x_0[-1], y_0[0], y_0[-1]])

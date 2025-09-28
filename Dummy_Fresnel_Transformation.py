@@ -1,12 +1,10 @@
 import numpy as np 
-import matplotlib.pyplot as plt
-from PIL import Image   
+import matplotlib.pyplot as plt  
 from Masks import *
 from scipy import special
-from scipy import integrate
 from scipy.special import fresnel
 from scipy.integrate import quad_vec
-from scipy.signal import correlate2d
+
 
 #Dummy code to try to generate the difraction pattern using The Fresnel transformation method
 
@@ -38,7 +36,7 @@ This parameters can be changed if we want to simulate the Paco image field (our 
 
 
 # Setup parameters
-z = 1500000 # um. Propagation distance
+z = 500000 # um. Propagation distance
 
 # Sampling parameters
 Δ_f = 1 / L_0 #um^-1. sampling interval in the frequences domain
@@ -75,12 +73,12 @@ y_0 = np.linspace (-L_0/2, L_0/2, N, endpoint = False)
 X_0,Y_0 = np.meshgrid (x_0,y_0)
 
 radius = 20 #um. Radius of the circle for the aperture function
-length = 10 #um. Length of the rectangle for the aperture function
+length = 60 #um. Length of the rectangle for the aperture function
 
 # Generating the aperture function. Uncomment the one you want to use
 
-#U_0 = circle(radius, X_0, Y_0)
-U_0 = rectangle(length, length, X_0, Y_0)
+U_0 = circle(radius, X_0, Y_0)
+#U_0 = rectangle(length, length, X_0, Y_0)
 #U_0 = vertical_slit(40, X_0, Y_0)
 #U_0 = horizontal_slit(40, X_0, Y_0)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
@@ -179,18 +177,18 @@ def I_axis(coord, a, z, k):
 """
 We will call these functions just when it is needed
 """
-
+"""
 U_x = I_axis(X_1, length/2, z, k)
 U_y = I_axis(Y_1, length/2, z, k)
 U_sinc = (np.exp(1j*k*z) / (1j*λ*z)) * np.exp(1j*k*(X_1**2+Y_1**2)/(2*z)) * U_x * U_y
 I_sinc = np.abs(U_sinc)**2
 I_sinc = I_sinc / I_sinc.max()
+"""
 
 
-
-#U_Jinc = U_of_r(R)
-#I_Jinc = np.abs(U_Jinc)**2
-#I_Jinc = I_Jinc / I_Jinc.max() * I_z.max()  # Normalizing to the same max value as I_z
+U_Jinc = U_of_r(R)
+I_Jinc = np.abs(U_Jinc)**2
+I_Jinc = I_Jinc / I_Jinc.max()
 
 """
 We will calculate the correlation between the numerical and analytical solutions
@@ -202,18 +200,18 @@ def calculate_correlation(A, B):
     #Map of correlation
     correlation = np.fft.fftshift(np.fft.ifft2(Fourier_Uz * np.conj(Fourier_U_sinc)))
    
-    # Normalización usando la energía de cada arreglo
+    # Normalization factor
     norm_factor = np.sqrt(np.sum(np.abs(A)**2) * np.sum(np.abs(B)**2))
 
-    # Tomar el máximo del mapa correlación (pico)
+    # Maximum correlation value normalized
     C = np.max(np.abs(correlation)) / norm_factor
 
     return C * 100
 
-print ("The percentage of correlation is: ",calculate_correlation(I_z, I_sinc))
+print ("The percentage of correlation is: ",calculate_correlation(I_z, I_Jinc), "%")
 
 """ Now we will graph the results """
-#plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
+plot_fields(I_0, I_z, x_0, y_0, x_1, y_1, Cut_Factor, title0 = "Input field I_0", titlez = "Output field I_z")
 print("Done")
     
 
