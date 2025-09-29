@@ -105,4 +105,4 @@ def Analitic_Comparation_Angular_Spectrum():
     print ("The percentage of correlation is: ",calculate_correlation(I_z, I_Jinc_Norm), "%")
 
 
-Analitic_Comparation_Angular_Spectrum()
+#Analitic_Comparation_Angular_Spectrum()

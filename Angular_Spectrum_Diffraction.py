@@ -181,4 +181,4 @@ I_z = np.abs(U_z)**2
 Graph results   
 """
 
-Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.3, title_input = "Transmitancia", title_output = "Intensidad del campo propagado")
+#Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.3, title_input = "Transmitancia", title_output = "Intensidad del campo propagado")
