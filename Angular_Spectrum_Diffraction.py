@@ -24,7 +24,7 @@ k = 2 * np.pi / λ  # um^-1. Wavenumber
 
 # Sensor parameters (CS165MU1 Cmos sensor taken as reference)
 Δ = 3.45 # um. Sampling interval in the spatial domain. (Square pixel size)
-N = 1094 # Number of samples per side of the square grid 
+N = 1024 # Number of samples per side of the square grid 
 L = N * Δ  # um. Physical size of the sensor grid (Emm...) ~ 5 mm 
 print("Physical size of the grid L:", L, "um")
 
@@ -43,9 +43,10 @@ z_max = (N * Δ**2) / λ # um. Maximum propagation distance in which angular spe
 f_Nyquist = 1/(2*Δ)  # um^-1. Nyquist frequency. Maximum frequency that can be accurately represented
 
 if(z > z_max):
-    print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
-    Propagation_Distance = z_max
-    print("Propagation distance set at:", Propagation_Distance)
+    #print("Exceded maximum propagation distance for proper sampling in the angular spectrum method.")
+    #Propagation_Distance = z_max
+    #print("Propagation distance set at:", Propagation_Distance)
+    pass
     
 print (z_max, "um is the maximum propagation distance for proper sampling in the angular spectrum method.")
 
@@ -57,15 +58,27 @@ x = np.linspace(-L/2, L/2, N, endpoint = False)
 y = np.linspace(-L/2, L/2, N, endpoint = False)
 X, Y = np.meshgrid(x, y)
 
-radius = 18 #um. Radius of the circle for the aperture function
+radius = 20 #um. Radius of the circle for the aperture function
 length = 60 #um. Length of the side of the square aperture function
 
-U_0 = circle(radius, X, Y)
+#U_0 = circle(radius, X, Y)
 #U_0 = rectangle(length,length, X, Y)
 #U_0 = vertical_slit(40, X, Y)
-#U_0 = horizontal_slit(40, X, Y)
+#U_0 = horizontal_slit(20, X, Y)
 #U_0 = cross_mask(80,80,60,40,60,20,N,X,Y)
-#U_0 = load_image('Images/Rochi_square.png', N)
+U_0 = load_image('Images/Paco.png', N)
+
+"""
+# For talbot 
+U_0 = Ronchi_mask(10, X, Y)  # Ronchi grating
+
+z = Talbot_length(10, 1)
+
+z = z + 500
+"""
+
+
+print(z)
 
 """
 -> 2.) Calculate A[p,q,0] - the angular spectrum at z=0 using FFT
@@ -168,4 +181,4 @@ I_z = np.abs(U_z)**2
 Graph results   
 """
 
-Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.9, title_input = "Transmitance", title_output = "Intensity of propagated field")
+Graph_Mask_and_Field_Angular_Spectrum(U_0, I_z, x, y, contrast_limit = 0.3, title_input = "Transmitancia", title_output = "Intensidad del campo propagado")

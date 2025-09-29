@@ -100,7 +100,7 @@ def Analitic_Comparation_Angular_Spectrum():
     I_Jinc = np.abs(U_Jinc)**2
     I_Jinc_Norm = I_Jinc / I_Jinc.max()
     
-    Graph_Mask_and_Field_Angular_Spectrum(I_z, I_Jinc_Norm, x, y, contrast_limit = 0.9, title_input = "Intensidad del campo propagado: Espectro angular", title_output = "Intensidad del campo propagado: Solución analítica")
+    Graph_Mask_and_Field_Angular_Spectrum(U_0, I_Jinc_Norm, x, y, contrast_limit = 0.9, title_input = "Transmitancia", title_output = "Intensidad del campo propagado:\nSolución analítica")
 
     print ("The percentage of correlation is: ",calculate_correlation(I_z, I_Jinc_Norm), "%")
 

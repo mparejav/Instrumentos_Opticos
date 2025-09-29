@@ -125,7 +125,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
     # Input field
-    im0 = axes[0].imshow(Mask, cmap = "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
+    im0 = axes[0].imshow(Mask, cmap = "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Mask) * contrast_limit)
     axes[0].set_title(title_input)
     axes[0].set_xlabel("x [um]")
     axes[0].set_ylabel("y [um]")
@@ -153,7 +153,7 @@ def Graph_Mask_and_Field_Angular_Spectrum(Mask, Intensity_Propagated_Field, x, y
     as those of the input plane.
     """
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "inferno", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap= "gray", extent=[x[0], x[-1], y[0], y[-1]], vmax = np.max(Intensity_Propagated_Field) * contrast_limit)
     axes[1].set_title(title_output)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -237,8 +237,8 @@ def Talbot_length(lines_per_mm, n):
     period_um = 1000 / lines_per_mm   # um per line pair (bright+dark)
 
     # Calculates Talbot length
-    talbot_length = (n * 2 * period_um**2) / λ
-    
+    talbot_length = ((n) * period_um**2) / (2*λ)
+
     print(f"Talbot length for {lines_per_mm} lines/mm: {talbot_length:.2f} um")
     
     Propagation_Distance_um = talbot_length
@@ -265,10 +265,18 @@ def select_image_path(option):
         2: 'Images/Trans_Cam_111mm_Luz_Trans_1_1_2pulgada.png',
         3: 'Images/Trans_Cam_156mm_Luz_Trans_1_1_2pulgada.png',
         4: 'Images/Trans_Cam_109mm_Luz_Trans_46mm.png',
-        5: 'Images/Trans_Cam_109mm_Luz_Trans_6_pulgada.png'
-        }
+        5: 'Images/Trans_Cam_109mm_Luz_Trans_6_pulgada.png',
+        6: 'Images/Paco_10cm.tif',
+        7: 'Images/Paco_14cm.tif',
+        8: 'Images/Paco_20cm.tif',
+        9: 'Images/Paco_25cm.tif',
+        10: 'Images/Paco_31cm.tif'
+    }
     return switcher.get(option, "Invalid option")
 
-path = select_image_path(1)
 
-print(path)
+
+
+#path = select_image_path(1)
+
+#print(path)
