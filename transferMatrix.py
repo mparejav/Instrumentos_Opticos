@@ -36,7 +36,7 @@ f = 500  # Focal length of the lens in mm
 d = 700  # Distance from the transmitance to lens in mm
 
 #We are creating the matrix for O(u,v) in terms of f
-matrixO = [[[1, f], [0, 1]],[[1, f], [0, 1]], [[1, 0], [-1/f, 1]], [[1, f], [0, 1]], 
+matrixO = [[[1, f], [0, 1]], [[1, 0], [-1/f, 1]], [[1, f], [0, 1]], 
            [[1, 0],[0, 1]],[[1, f], [0, 1]],[[1, 0], [-1/f, 1]],[[1, f], [0, 1]]]
 
 #We are creating the matrix for U(u',v') in terms of f and d
@@ -59,7 +59,7 @@ resultU = multiply_matrices(matrixU)
 Printing the results
 """
 
-print ("The optic system matrix is \n", resultOalgebraic)
-print ("The optic system matrix is \n", resultUalgebraic)
+print ("The optic system matrix is \n", resultO)
+print ("The optic system matrix is \n", resultU)
 
 
