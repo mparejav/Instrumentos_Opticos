@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 
 """
+We used concepts of the book "Lasers" by A.E. Siegman Chapter 15
 In this module, we create and multiply matrices for an optical system.
 Thus, we are going to use the conjugate planes theory
 """
@@ -59,7 +60,7 @@ resultU = multiply_matrices(matrixU)
 Printing the results
 """
 
-print ("The optic system matrix is \n", resultO)
-print ("The optic system matrix is \n", resultU)
+print ("The optic system matrix is \n", resultOalgebraic)
+print ("The optic system matrix is \n", resultUalgebraic)
 
 
