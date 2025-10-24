@@ -269,6 +269,11 @@ def select_image_path(option):
         }
     return switcher.get(option, "Invalid option")
 
+#Creating the transmitance function for the mirror M1 when this is a function = 1
+def transmitance_1 (L_x, L_y, X,Y):
+    Transmitance = np.where((np.abs(X) <= L_x/2) & (np.abs(Y) <= L_y/2), 1, 0)
+    return Transmitance
+
 #path = select_image_path(1)
 
 #print(path)
