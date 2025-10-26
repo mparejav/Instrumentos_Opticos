@@ -107,6 +107,8 @@ Creating the input field and the output field when it is propagated to the trans
 #Creating the input field, at this time it is a circular aperture
 U_0 = circle(1000,X_0,Y_0) #With first coordinates
 
+#Taking an image as the input field
+U_0 = load_image(r'Entrega02\Noise _images\Noise (1).png', N)
 
 #Calculating the output field with the diffractive formulation
 U_beforeTransmitance = difractive_formulation (U_0,A,B,D,λ,Δ_0,X_0,Y_0,X_1,Y_1)
@@ -145,15 +147,17 @@ I_CAM1 = I_CAM1 / np.max(I_CAM1)
 I_CAM2 = np.abs(U_beforeTransmitance)**2
 #Normalization of the intensity
 I_CAM2 = I_CAM2 / np.max(I_CAM2)
+ # logaritmic scale
+I_CAM2 = np.log10(I_CAM2 + 1e-12) 
 
 """
 Plotting the results
 """
 #We plot the intensity of the propagated field towards CAM2
-plot_fields(I_0, I_CAM2, x_0, y_0, x_CAM2, y_CAM2, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado:\n formulación difractiva")
+plot_fields(I_0, I_CAM2, x_0, y_0, x_CAM2, y_CAM2, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado \n en CAM2")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, I_CAM1, x_0, y_0, x_CAM1, y_CAM1, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado:\n formulación difractiva")
+plot_fields(I_0, I_CAM1, x_0, y_0, x_CAM1, y_CAM1, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 
