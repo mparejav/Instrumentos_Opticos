@@ -141,6 +141,7 @@ I_0 = np.abs(U_0)**2
 I_CAM1 = np.abs(U_CAM1)**2
 
 #Normalization of the intensity
+#We need that the max value of I_CAM1 would be differente of 0
 if (np.max(I_CAM1) ==0):
     I_CAM1 = I_CAM1
 else:
