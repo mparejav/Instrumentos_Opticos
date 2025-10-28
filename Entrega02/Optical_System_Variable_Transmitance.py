@@ -111,6 +111,7 @@ U_0 = circle(1000,X_0,Y_0) #With first coordinates
 U_0 = load_image(r'Entrega02\Noise _images\Noise (1).png', N)
 
 #Calculating the output field with the diffractive formulation
+#Here we have the spectrum of U_0
 U_beforeTransmitance = difractive_formulation (U_0,A,B,D,λ,Δ_0,X_0,Y_0,X_1,Y_1)
 
 """
@@ -118,7 +119,7 @@ Creating the transmitance function and applying it to the output field U_beforeT
 """
 
 #Creating the transmitance function
-Transmitance_M1 = transmitance_1 (L_1, X_M1, Y_M1)
+Transmitance_M1 = transmitance_1 (L_xM1,L_yM1, X_M1, Y_M1)
 
 #Multiplying the field before the transmitance by the transmitance function
 U_afterTransmitance = U_beforeTransmitance * Transmitance_M1
@@ -138,8 +139,12 @@ Calculating the intensities
 I_0 = np.abs(U_0)**2
 #Intensity at the sensor CAM1
 I_CAM1 = np.abs(U_CAM1)**2
+
 #Normalization of the intensity
-I_CAM1 = I_CAM1 / np.max(I_CAM1)
+if (np.max(I_CAM1) ==0):
+    I_CAM1 = I_CAM1
+else:
+    I_CAM1 = I_CAM1 / np.max(I_CAM1)
 
 #Intensity at the sensor CAM2, when we take the square module, we lose the terms of the spherical
 #phase terms, then the intensity of the propagated field is equal when d is different to f, if d = f
