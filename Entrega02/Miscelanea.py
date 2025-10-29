@@ -37,9 +37,9 @@ The image must have a black background (obstacle) and white figures (aperture).
 Returns:
     _type_: A binary numpy array (0 and 1) representing the mask.
 """
-def load_image(image_path, Number_of_Samples):
+def load_image(image_path, Number_of_Samplesx, Number_of_Samplesy):
     img = Image.open(image_path).convert('L') # Convert to grayscale
-    img = img.resize((Number_of_Samples, Number_of_Samples)) # Resize to simulation matrix
+    img = img.resize((Number_of_Samplesx, Number_of_Samplesy)) # Resize to simulation matrix
     img_array = np.array(img)
     # Normalize: values >128 are considered as aperture (1), others as obstacle (0)
     mask = np.where(img_array > 128, 1, 0)
