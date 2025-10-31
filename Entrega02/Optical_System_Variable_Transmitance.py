@@ -61,7 +61,7 @@ Creating the input field and the output field when it is propagated to the trans
 U_0 = circle(1000,X_CAM1,Y_CAM1) #With first coordinates
 
 #Taking an image as the input field
-U_0 = load_image(r'Entrega02\Noise _images\Noise (1).png', M_x_CAM1,M_y_CAM1)
+U_0 = load_image(r'Entrega02\Noise _images\Noise (6).png', M_x_CAM1,M_y_CAM1)
 
 #Calculating the output field with the diffractive formulation
 #Here we have the spectrum of U_0
@@ -72,7 +72,7 @@ Creating the transmitance function and applying it to the output field U_beforeT
 """
 
 #Creating the transmitance function
-Transmitance_M1 = transmitance_1 (L_xM1,L_yM1, X_2, Y_2)
+Transmitance_M1 = transmitance_1 (L_xM1,L_yM1,910,1190, X_2, Y_2)
 
 #We need that the U_beforeTransmitance and Transmitance_M1 have the same number of samples
 
@@ -136,10 +136,10 @@ Plotting the results
 """
 
 #We plot the intensity of the field before and after transmitance
-plot_fields(I_beforeTransmitance_M1, I_afterTransmitance_M1, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de la transmitancia", titlez = "Intensidad del Campo después \n de la transmitancia")
+#plot_fields(I_beforeTransmitance_M1, I_afterTransmitance_M1, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, I_CAM1, x_CAM1, y_CAM1, x_CAM1, y_CAM1, Cut_Factor=70, title0 = "Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
+plot_fields(I_0, I_CAM1, x_CAM1, y_CAM1, x_CAM1, y_CAM1, Cut_Factor=60, title0 = "Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 

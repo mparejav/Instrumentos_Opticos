@@ -270,9 +270,13 @@ def select_image_path(option):
     return switcher.get(option, "Invalid option")
 
 #Creating the transmitance function for the mirror M1 when this is a function = 1
-def transmitance_1 (L_x,L_y, X,Y):
-    Transmitance = np.where((np.abs(X) <= L_x/2) & (np.abs(Y) <= L_y/2), 1, 0)
-    return Transmitance
+def transmitance_1 (L_x,L_y, r_minor, r_mayor, X,Y):
+    rect_mask = (np.abs(X) <= L_x/2) & (np.abs(Y) <= L_y/2)
+    R2 = X**2 + Y**2
+    ring_mask = (R2 >= r_minor**2) & (R2 <= r_mayor**2)
+    mask = np.where(rect_mask & (~ring_mask), 1, 0)
+
+    return mask
 
 #Pad a field having a sample 
 def pad (inputField, samplingField):
@@ -293,6 +297,12 @@ def coordinates (L_x, L_y, N_x, N_y):
     X, Y = np.meshgrid(x, y)
     return x,y,X,Y
 
+
+#Function for create a ring 
+def ring (r_minor, r_mayor,X,Y):
+    mask = np.where((r_minor**2 <= (X**2 + Y**2)) & ((X**2 + Y**2) <= r_mayor**2), 0, 1)
+    return mask
+    
 #path = select_image_path(1)
 
 #print(path)

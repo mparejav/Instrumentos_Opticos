@@ -83,10 +83,8 @@ I_CAM2 = np.log10(I_CAM2 + 1e-12)
 Plotting the results
 """
 #We plot the intensity of the propagated field towards CAM2
-#plot_fields(I_0, I_CAM2, x_CAM1, y_CAM1, x_CAM2, y_CAM2, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado \n en CAM2")
+plot_fields(I_0, I_CAM2, x_0, y_0, x_CAM2, y_CAM2, Cut_Factor=40, title0 = "Objeto", titlez = "Intensidad del Campo propagado \n en CAM2")
 
-#We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, I_CAM2, x_0, y_0, x_CAM2, y_CAM2, Cut_Factor=80, title0 = "Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 
