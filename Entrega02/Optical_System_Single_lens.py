@@ -77,7 +77,7 @@ if (np.max(I_CAM2) ==0):
 else:
     I_CAM2 = I_CAM2 / np.max(I_CAM2)
 
-I_CAM2 = np.log10(I_CAM2 + 1e-12) 
+I_CAM2 = np.log10(I_CAM2 + 1e-7) 
 
 """
 Plotting the results

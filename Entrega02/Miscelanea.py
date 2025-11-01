@@ -270,13 +270,62 @@ def select_image_path(option):
     return switcher.get(option, "Invalid option")
 
 #Creating the transmitance function for the mirror M1 when this is a function = 1
-def transmitance_1 (L_x,L_y, r_minor, r_mayor, X,Y):
+def transmitance_ring (L_x,L_y, r_minor, r_mayor, X,Y):
     rect_mask = (np.abs(X) <= L_x/2) & (np.abs(Y) <= L_y/2)
     R2 = X**2 + Y**2
     ring_mask = (R2 >= r_minor**2) & (R2 <= r_mayor**2)
-    mask = np.where(rect_mask & (~ring_mask), 1, 0)
+    mask = np.where(rect_mask & (~ring_mask), 0, 1)
 
     return mask
+
+def transmitance_1 (L_x,L_y, X,Y):
+    mask = np.where((np.abs(X) <= L_x/2) & (np.abs(Y) <= L_y/2),1,0)
+    return mask
+
+
+def transmitance_X_rect(X, Y, width, r, Lx, Ly):
+    """
+    Crea una transmitancia en forma de X dentro de un rectángulo,
+    con un círculo transparente en el centro.
+
+    Parámetros:
+    -----------
+    X, Y : arrays
+        Mallas (meshgrid)
+    width : float
+        Grosor de las líneas que forman la X.
+    r : float
+        Radio del círculo central transparente.
+    Lx, Ly : float
+        Tamaños del rectángulo en x y y (ancho y alto).
+
+    Retorna:
+    --------
+    T : array
+        Transmitancia binaria (0 = bloquea, 1 = deja pasar)
+    """
+
+    # ---- Máscara del rectángulo ----
+    rect_mask = (np.abs(X) <= Lx/2) & (np.abs(Y) <= Ly/2)
+
+    # ---- Máscara de las diagonales (forma de X) ----
+    d1 = np.abs(Y - X) / np.sqrt(15)
+    d2 = np.abs(Y + X) / np.sqrt(15)
+    X_mask = (d1 < width/2) | (d2 < width/2)  # 1 donde hay línea
+
+    # ---- Máscara del círculo central ----
+    circle_mask = (X**2 + Y**2) <= r**2
+
+    # ---- Combinación lógica ----
+    # Dentro del rectángulo → 1
+    # Dentro de la X → 0 (a menos que esté en el círculo central)
+    # Fuera del rectángulo → 0
+    T = np.zeros_like(X, dtype=float)
+    T[rect_mask] = 1                    # dentro del rectángulo = 1
+    T[X_mask & rect_mask] = 0           # dibuja la X
+    T[circle_mask & rect_mask] = 1      # restaura el círculo central
+
+    return T
 
 #Pad a field having a sample 
 def pad (inputField, samplingField):

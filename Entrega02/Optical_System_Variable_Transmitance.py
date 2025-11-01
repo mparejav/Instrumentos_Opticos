@@ -72,7 +72,9 @@ Creating the transmitance function and applying it to the output field U_beforeT
 """
 
 #Creating the transmitance function
-Transmitance_M1 = transmitance_1 (L_xM1,L_yM1,910,1190, X_2, Y_2)
+Transmitance_M1 = transmitance_ring (L_xM1,L_yM1,0,1100, X_2, Y_2)
+#Transmitance_M1 = transmitance_1 (L_xM1,L_yM1,X_2,Y_2)
+#Transmitance_M1 = transmitance_X_rect(X_2, Y_2, 150, 900, L_xM1, L_yM1)
 
 #We need that the U_beforeTransmitance and Transmitance_M1 have the same number of samples
 
@@ -101,7 +103,7 @@ if (np.max(I_beforeTransmitance_M1) ==0):
 else:
     I_beforeTransmitance_M1 = I_beforeTransmitance_M1 / np.max(I_beforeTransmitance_M1)
     
-I_beforeTransmitance_M1 = np.log10(I_beforeTransmitance_M1 + 1e-12) 
+I_beforeTransmitance_M1 = np.log10(I_beforeTransmitance_M1 + 1e-7) 
 
 #Intensity at the field after Transmitance
 I_afterTransmitance_M1 = np.abs(U_afterTransmitance_M1)**2
@@ -139,7 +141,7 @@ Plotting the results
 #plot_fields(I_beforeTransmitance_M1, I_afterTransmitance_M1, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, I_CAM1, x_CAM1, y_CAM1, x_CAM1, y_CAM1, Cut_Factor=60, title0 = "Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
+plot_fields(I_afterTransmitance_M1, I_CAM1, x_2, y_2, x_CAM1, y_CAM1, Cut_Factor=60, title0 = "Espectro filtrado por la \n transmitancia", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 
