@@ -8,11 +8,15 @@ Parameteres of the optical system with variable pupile
 # Light parameters
 λ = 0.533  # um. Wavelength of light (He-Ne laser)
 
-# Objective parameters
-fMO = 500000 #um. Focal length of the lens 
+# Microscope objetive parameters
+NA = 0.5 # Numerical aperture
+M = 20  # Magnification
 
 #Tube lens parameteres
 fTL = 200000 #um. Focal distance of TL
+
+# Objective parameters
+fMO = fTL/M #um. Focal length of the lens (microscope objective) 
 
 #Propagation distance for the first difractive implementation
 L_0 = 2*fMO
@@ -20,6 +24,7 @@ L_0 = 2*fMO
 #Propagation distance for the second difractive implementation
 L_1 = 2*fTL
 
+Rmax = (NA/λ)*fMO  # um. Maximum radius of the pupile
 
 """
 1. Parameters of the CAM1
@@ -65,7 +70,7 @@ Creating the input field and the output field when it is propagated to the trans
 U_0 = circle(1000,X_CAM1,Y_CAM1) #With first coordinates
 
 #Taking an image as the input field
-U_0 = load_image(r'Entrega02\Noise _images\Noise (6).png', M_CAM1,M_CAM1)
+U_0 = load_image(r'Entrega03/USAF-1951.png', M_CAM1,M_CAM1)
 
 
 #Calculating the output field with the diffractive formulation
@@ -77,14 +82,17 @@ Creating the transmitance function and applying it to the output field U_beforeT
 """
 
 #Creating the transmitance function
-pupile = transmitance_ring (L_3,L_3,0,1100, X_2, Y_2)
+
+pupile = circle (Rmax,X_2, Y_2)
+
+#pupile = transmitance_ring (L_3,L_3,0,1100, X_2, Y_2)
 #pupile = transmitance_1 (L_xM1,L_yM1,X_2,Y_2)
 #pupile = transmitance_X_rect(X_2, Y_2, 150, 900, L_xM1, L_yM1)
 
 #We need that the U_beforeTransmitance and pupile have the same number of samples
 
 
-#Multiplying the field before the transmitance by the transmitance function
+#Multiplying the field before the transmitance by the transmitance function xd
 U_afterpupile = U_beforepupile * pupile
 
 A2, B2, C2,D2 = transferMatrix_Propagation_Lens_Propagation(fTL,fTL)
@@ -100,7 +108,7 @@ U_CAM1 = np.fft.fftshift(U_CAM1)
 Calculating the intensities
 """
 """
-This part is just if we want to plot the fields before and after the transmitance DMD
+This part is just if we want to plot the fields before and after the transmitance DMD ???
 """
 #Intensity of the field before transmitance
 I_beforepupile = np.abs(U_beforepupile)**2
