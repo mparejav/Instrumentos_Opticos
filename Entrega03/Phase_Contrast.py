@@ -92,7 +92,7 @@ Creating the transmitance function and applying it to the output field U_beforeT
 
 #pupile = circle (Rmax,X_2, Y_2)
 
-Pupile = Variable_Radious_Transmitance(Rmax, Rmax*0.1, 1, X_2, Y_2)
+Pupile = Variable_Radious_Transmitance(Rmax, Rmax*0.01, 0.1, X_2, Y_2)
 
 
 #We need that the U_beforeTransmitance and pupile have the same number of samples
