@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
+
+
 '''
 This module provides functions to create various types of masks or apertures. Some are created analytically, 
 while others can be loaded from image files.
@@ -328,7 +330,7 @@ def transmitance_X_rect(X, Y, width, r, Lx, Ly):
     return T
 
 #Pad a field having a sample 
-def pad (inputField, samplingField):
+def pad(inputField, samplingField):
     N1x, N1y = inputField.shape
     N2x, N2y = samplingField.shape  # needed size
     pad_x_before = (N2x - N1x) // 2
@@ -430,12 +432,33 @@ def load_complex_array():
     return arr.reshape(n, n)
 
 
-def Variable_Radious_Transmitance(R_external, R_internal, X, Y):
+def Variable_Radious_Transmitance(R_external, R_internal, Transmitance, X, Y):
+    """
+    Circular pupil with an inner disk of variable amplitude transmission.
 
-    if(R_external <= R_internal or R_internal <= 0):
-        raise ValueError("The external radius must be greater than the internal radius.")
+    - r > R_external        -> 0
+    - R_internal < r <= Re  -> 1
+    - r <= R_internal       -> Transmitance (amplitude)
+    """
+    
+    # Check consistency of radius values
+    if R_external < R_internal or R_internal < 0:
+        raise ValueError("The external radius must be greater than the internal radius and positive.")
 
-    else:
-        Annulus = np.where((X**2 + Y**2 <= R_external**2) & (X**2 + Y**2 >= R_internal**2), 1, 0)
+    # Compute squared radius grid
+    r2 = X**2 + Y**2
 
-        return Annulus
+    # Base pupil: 1 inside R_external, 0 outside
+    Pupila = np.where(r2 <= R_external**2, 1.0, 0.0)
+
+    # Inner region mask: r <= R_internal
+    inner_mask = r2 <= R_internal**2
+
+    # Apply variable transmission in the inner disk
+    Pupila[inner_mask] = Transmitance
+
+    return Pupila
+
+
+
+
