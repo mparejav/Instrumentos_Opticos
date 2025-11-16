@@ -104,7 +104,7 @@ def plot_fields(Mask, Intensity_Propagated_Field, x, y, x_p, y_p, Cut_Factor, ti
     Cut_Factor = (Cut_Factor / 100)
 
     # Output field
-    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="gray", extent=[x_p[0], x_p[-1], y_p[0], y_p[-1]], vmax = np.max(Intensity_Propagated_Field)*Cut_Factor)
+    im1 = axes[1].imshow(Intensity_Propagated_Field, cmap="inferno", extent=[x_p[0], x_p[-1], y_p[0], y_p[-1]], vmax = np.max(Intensity_Propagated_Field)*Cut_Factor)
     axes[1].set_title(titlez)
     axes[1].set_xlabel("x [um]")
     axes[1].set_ylabel("y [um]")
@@ -430,3 +430,12 @@ def load_complex_array():
     return arr.reshape(n, n)
 
 
+def Variable_Radious_Transmitance(R_external, R_internal, X, Y):
+
+    if(R_external <= R_internal or R_internal <= 0):
+        raise ValueError("The external radius must be greater than the internal radius.")
+
+    else:
+        Annulus = np.where((X**2 + Y**2 <= R_external**2) & (X**2 + Y**2 >= R_internal**2), 1, 0)
+
+        return Annulus
