@@ -404,3 +404,29 @@ def crop_shift(campo, crop_size, shift_x, shift_y):
     x2 = int(cx_disp + crop_Nx//2)
     
     return campo[y1:y2, x1:x2]
+
+def load_complex_array():
+    with open('Entrega03/MuestraBio_E06.txt', "r") as f:
+        txt = f.read()
+
+    # Changes commas to new lines
+    txt = txt.replace(",", "\n")
+
+    # Save to a temporary buffer
+    from io import StringIO
+    buffer = StringIO(txt)
+
+    # NumPy to load complex array
+    arr = np.genfromtxt(buffer, dtype=complex)
+
+    # Flatten and reshape to square
+    arr = arr.flatten()
+    N = arr.size
+    n = int(np.sqrt(N))
+    
+    if n*n != N:
+        raise ValueError("Not a spongebob.")
+
+    return arr.reshape(n, n)
+
+
