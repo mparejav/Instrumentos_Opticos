@@ -1,8 +1,6 @@
 import numpy as np  
 from Miscelanea import *
 from Difraction_Implementation_Of_Matrix import *
-from scipy.interpolate import RegularGridInterpolator
-from scipy.ndimage import zoom
 
 """
 Parameteres of the optical system with variable pupile
@@ -128,16 +126,20 @@ if (np.max(I_CAM1) ==0):
     I_CAM1 = I_CAM1
 else:
     I_CAM1 = I_CAM1 / np.max(I_CAM1)
-
+    
+"""
+Taking the phase map 
+"""
+phase_U_0 = np.angle(U_0)
 """
 Plotting the results
 """
 
 #We plot the intensity of the field before and after transmitance
-#plot_fields(I_beforepupile, I_afterpupile, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
+plot_fields(I_0, phase_U_0, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad del campo \n complejo", titlez = "Fase del campo complejo")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, np.log10(I_CAM1), x_3, y_3, x_magnificated, y_magnificated, Cut_Factor=10, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
+#plot_fields(I_0, np.log10(I_CAM1), x_3, y_3, x_magnificated, y_magnificated, Cut_Factor=10, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 

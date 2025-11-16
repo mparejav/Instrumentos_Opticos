@@ -1,8 +1,6 @@
 import numpy as np  
 from Miscelanea import *
 from Difraction_Implementation_Of_Matrix import *
-from scipy.interpolate import RegularGridInterpolator
-from scipy.ndimage import zoom
 
 """
 Parameteres of the optical system with variable pupile
