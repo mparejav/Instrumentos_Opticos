@@ -134,9 +134,13 @@ phase_U_0 = np.angle(U_0)
 """
 Plotting the results
 """
+"""
+Printing the correlation between phase contrast and phase map
+"""
+print ("The percentage of correlation is: ",calculate_correlation(I_CAM1, phase_U_0), "%")
 
 #We plot the intensity of the field before and after transmitance
-plot_fields(I_0, phase_U_0, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad del campo \n complejo", titlez = "Fase del campo complejo")
+#plot_fields(I_0, phase_U_0, x_3, y_3, x_3, y_3, Cut_Factor=40, title0 = "Intensidad del campo \n complejo", titlez = "Fase del campo complejo")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
 #plot_fields(I_0, np.log10(I_CAM1), x_3, y_3, x_magnificated, y_magnificated, Cut_Factor=10, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
