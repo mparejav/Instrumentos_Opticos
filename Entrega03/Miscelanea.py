@@ -384,3 +384,23 @@ def transferMatrix_Propagation_Lens_Propagation(f,d):
     for j in range(1, len(matrixU)):
         result = np.dot(result, matrixU[j])
     return result [0][0], result[0][1], result[1][0], result[1][1]
+
+#Creating a function to crop and shifting a field
+
+def crop_shift(campo, crop_size, shift_x, shift_y):
+    Ny, Nx = campo.shape
+    crop_Ny, crop_Nx = crop_size, crop_size
+    dy, dx = shift_y, shift_x
+    
+    cy = Ny // 2
+    cx = Nx // 2
+    
+    cy_disp = cy + dy
+    cx_disp = cx + dx
+    
+    y1 = int(cy_disp - crop_Ny//2)
+    y2 = int(cy_disp + crop_Ny//2)
+    x1 = int(cx_disp - crop_Nx//2)
+    x2 = int(cx_disp + crop_Nx//2)
+    
+    return campo[y1:y2, x1:x2]

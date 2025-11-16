@@ -1,6 +1,8 @@
 import numpy as np  
 from Miscelanea import *
 from Difraction_Implementation_Of_Matrix import *
+from scipy.interpolate import RegularGridInterpolator
+from scipy.ndimage import zoom
 
 """
 Parameteres of the optical system with variable pupile
@@ -26,6 +28,7 @@ L_1 = 2*fTL
 
 Rmax = (NA/λ)*fMO  # um. Maximum radius of the pupile
 
+
 """
 1. Parameters of the CAM1
 We will define the coordinates of the propagated fields with the parameters of the CAM1 
@@ -34,16 +37,17 @@ We will define the coordinates of the propagated fields with the parameters of t
 Δ_1_CAM1 = 2.74 # um. The size of the pixel in the sensor
 M_CAM1 = 2848 # Number of pixels in the x and y axis for the sensor
 L_CAM1 = M_CAM1 * Δ_1_CAM1  # um. Physical size of the sensor CAM1 in the x and y axis
-
 #Creating the coordinates for the sensor CAM1
 x_CAM1, y_CAM1, X_CAM1, Y_CAM1 = coordinates (L_CAM1, L_CAM1, M_CAM1,M_CAM1)
+
+#Crop_size 
+crop_size = M_CAM1/M
 
 """
 2. Parameters of the propagated field towards the pupile
 """
 Δ_2  = (λ *2*L_1)/(M_CAM1*Δ_1_CAM1)  # um. Sampling interval in the output field in x and y axis        
 L_2 = M_CAM1 * Δ_2 #um. Physical size of the grid in the output field in x axis      
-
 #Creating the coordinates for the first propagation
 x_2, y_2, X_2, Y_2 = coordinates (L_2, L_2, M_CAM1,M_CAM1)
 
@@ -52,8 +56,14 @@ x_2, y_2, X_2, Y_2 = coordinates (L_2, L_2, M_CAM1,M_CAM1)
 """
 Δ_3  = (λ *2*L_0)/(M_CAM1*Δ_2)  # um. Sampling interval in the output field in x and y axis        
 L_3 = M_CAM1 * Δ_3 #um. Physical size of the grid in the output field in x axis 
-#Creating the coordinates for the first propagation
+#Creating the coordinates for the input field
 x_3, y_3, X_3, Y_3 = coordinates (L_3, L_3, M_CAM1,M_CAM1)
+
+"""
+4. Creating the magnificated coordinates
+"""
+L_magnificated = L_CAM1*M
+x_magnificated,y_magnificated, X_magnificated, Y_magnificated = coordinates(L_magnificated, L_magnificated, M_CAM1, M_CAM1)
 
 """
 Creating the parameteres for the matrix system, in the first propagation towards The transmitance
@@ -70,12 +80,12 @@ Creating the input field and the output field when it is propagated to the trans
 U_0 = circle(1000,X_CAM1,Y_CAM1) #With first coordinates
 
 #Taking an image as the input field
-U_0 = load_image(r'Entrega03/USAF-1951.png', M_CAM1,M_CAM1)
+U_0 = load_image(r'Entrega03/USAF-1951.jpg', M_CAM1,M_CAM1)
 
 
 #Calculating the output field with the diffractive formulation
 #Here we have the spectrum of U_0
-U_beforepupile = difractive_formulation (L_0,U_0,A1,B1,D1,λ,Δ_1_CAM1,Δ_1_CAM1,X_CAM1,Y_CAM1,X_2,Y_2)
+U_beforepupile = difractive_formulation (L_0,U_0,A1,B1,D1,λ,Δ_3,Δ_3,X_3,Y_3,X_2,Y_2)
 
 """
 Creating the transmitance function and applying it to the output field U_beforeTransmitance
@@ -98,17 +108,22 @@ U_afterpupile = U_beforepupile * pupile
 A2, B2, C2,D2 = transferMatrix_Propagation_Lens_Propagation(fTL,fTL)
 
 #Calculating the output field with the diffractive formulation
-U_CAM1 = difractive_formulation (L_1,U_afterpupile,A2,B2,D2,λ,Δ_2,Δ_2,X_2,Y_2,X_CAM1, Y_CAM1)
+U_CAM1 = difractive_formulation (L_1,U_afterpupile,A2,B2,D2,λ,Δ_2,Δ_2,X_2,Y_2,X_magnificated, Y_magnificated)
 
 #Organizing the output field at the sensor CAM1 with shifting
 U_CAM1 = np.fft.fftshift(U_CAM1)
 
 
 """
+We need to crop the U_CAM1, to watch the part of the output Field that is inside the camera
+"""
+U_crop = crop_shift(U_CAM1,crop_size, -400,10)
+
+"""
 Calculating the intensities
 """
 """
-This part is just if we want to plot the fields before and after the transmitance DMD ???
+This part is just if we want to plot the fields before and after the pupile
 """
 #Intensity of the field before transmitance
 I_beforepupile = np.abs(U_beforepupile)**2
@@ -138,7 +153,7 @@ At this part we calculate for the intensities of the field in the CAM1
 I_0 = np.abs(U_0)**2
 
 #Intensity at the sensor CAM1
-I_CAM1 = np.abs(U_CAM1)**2
+I_CAM1 = np.abs(U_crop)**2
 
 #Normalization of the intensity
 if (np.max(I_CAM1) ==0):
@@ -155,7 +170,7 @@ Plotting the results
 #plot_fields(I_beforepupile, I_afterpupile, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_afterpupile, I_CAM1, x_2, y_2, x_CAM1, y_CAM1, Cut_Factor=60, title0 = "Espectro filtrado por la \n transmitancia", titlez = "Intensidad del Campo propagado\n en CAM1")
+plot_fields(I_0, I_CAM1, x_3, y_3, x_CAM1, y_CAM1, Cut_Factor=40, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 
