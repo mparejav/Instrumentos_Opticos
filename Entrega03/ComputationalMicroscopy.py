@@ -8,7 +8,7 @@ from scipy.ndimage import zoom
 Parameteres of the optical system with variable pupile
 """
 # Light parameters
-λ = 0.533  # um. Wavelength of light (He-Ne laser)
+λ = 0.533  # um. Wavelength of light
 
 # Microscope objetive parameters
 NA = 0.5 # Numerical aperture
@@ -81,6 +81,7 @@ U_0 = circle(1000,X_CAM1,Y_CAM1) #With first coordinates
 
 #Taking an image as the input field
 U_0 = load_image(r'Entrega03/USAF-1951.jpg', M_CAM1,M_CAM1)
+
 
 
 #Calculating the output field with the diffractive formulation
