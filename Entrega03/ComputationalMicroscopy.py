@@ -154,7 +154,7 @@ At this part we calculate for the intensities of the field in the CAM1
 I_0 = np.abs(U_0)**2
 
 #Intensity at the sensor CAM1
-I_CAM1 = np.abs(U_crop)**2
+I_CAM1 = np.abs(U_CAM1)**2
 
 #Normalization of the intensity
 if (np.max(I_CAM1) ==0):
@@ -171,7 +171,7 @@ Plotting the results
 #plot_fields(I_beforepupile, I_afterpupile, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
 
 #We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, I_CAM1, x_3, y_3, x_CAM1, y_CAM1, Cut_Factor=40, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
+plot_fields(I_0, I_CAM1, x_3, y_3, x_magnificated, y_magnificated, Cut_Factor=40, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
 
 
 
