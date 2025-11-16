@@ -80,7 +80,7 @@ Creating the input field and the output field when it is propagated to the trans
 U_0 = circle(1000,X_CAM1,Y_CAM1) #With first coordinates
 
 #Taking an image as the input field
-U_0 = load_image(r'Entrega03/USAF-1951.jpg', M_CAM1,M_CAM1)
+U_0 = load_image(r'Entrega03\bitmap.png', M_CAM1,M_CAM1)
 
 
 
