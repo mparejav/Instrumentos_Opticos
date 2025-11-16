@@ -22,7 +22,7 @@ def difractive_formulation (L,input_field,A,B,D,λ,initial_deltax,initial_deltay
     constantPhase = np.exp(1j*k*L)
     
     #We need that SphericalOutput has the same shape as U_2, then we will pad the U_2 with zeros
-    U_2_padded = pad (U_2, SphericalOutput)
+    U_2_padded = pad(U_2, SphericalOutput)
  
     #We multiply the U_2 per sphericalOutput term
     U_B = constantPhase*SphericalOutput * U_2_padded

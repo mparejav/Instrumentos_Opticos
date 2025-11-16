@@ -3,6 +3,7 @@ from Miscelanea import *
 from Difraction_Implementation_Of_Matrix import *
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import zoom
+import matplotlib.pyplot as plt
 
 """
 Parameteres of the optical system with variable pupile
@@ -84,60 +85,71 @@ U_0 = load_complex_array()
 #Here we have the spectrum of U_0
 U_beforepupile = difractive_formulation (d_0,U_0,A1,B1,D1,λ,Δ_3,Δ_3,X_3,Y_3,X_2,Y_2)
 
-"""
-Creating the transmitance function and applying it to the output field U_beforeTransmitance
-"""
 
-#Creating the transmitance function
+Rin_min = Rmax*0.1
 
-#pupile = circle (Rmax,X_2, Y_2)
+# Arreglos donde guardaremos resultados
+radios = np.linspace(Rin_min, Rmax, 10)              # o lo que quieras
+transmitancias = np.linspace(0.0, 1.0, 10, endpoint=False)            # 0.0, 0.1, ..., 1.0
 
-Pupile = Variable_Radious_Transmitance(Rmax, Rmax*0.1, 1, X_2, Y_2)
+CRMS_map = np.zeros((len(radios), len(transmitancias)))
+ 
+# Barrido doble
+for i, Rin in enumerate(radios):
 
+    for j, T in enumerate(transmitancias):
 
-#We need that the U_beforeTransmitance and pupile have the same number of samples
+        # ---- 1. Construcción del anillo en el plano de Fourier ----
+        Pupile = Variable_Radious_Transmitance(Rmax, Rin, T, X_2, Y_2)
 
-#Multiplying the field before the transmitance by the transmitance function xd
-U_afterpupile = U_beforepupile * Pupile
+        #Multiplying the field before the transmitance by the transmitance function xd
+        U_afterpupile = U_beforepupile * Pupile
 
-A2, B2, C2,D2 = transferMatrix_Propagation_Lens_Propagation(fTL,fTL)
+        A2, B2, C2,D2 = transferMatrix_Propagation_Lens_Propagation(fTL,fTL)
+    
+        #Calculating the output field with the diffractive formulation
+        U_CAM1 = difractive_formulation(d_1,U_afterpupile,A2,B2,D2,λ,Δ_2,Δ_2,X_2,Y_2,X_magnificated, Y_magnificated)
 
-#Calculating the output field with the diffractive formulation
-U_CAM1 = difractive_formulation (d_1,U_afterpupile,A2,B2,D2,λ,Δ_2,Δ_2,X_2,Y_2,X_magnificated, Y_magnificated)
+        #Organizing the output field at the sensor CAM1 with shifting
+        U_CAM1 = np.fft.fftshift(U_CAM1)
 
-#Organizing the output field at the sensor CAM1 with shifting
-U_CAM1 = np.fft.fftshift(U_CAM1)
+        """
+        At this part we calculate for the intensities of the field in the CAM1
+        """
 
+        #Intensity at the sensor CAM1
+        I_CAM1 = np.abs(U_CAM1)**2
 
-"""
-We need to crop the U_CAM1, to watch the part of the output Field that is inside the camera
-"""
-U_crop = crop_shift(U_CAM1,crop_size, 0,0)
+        # ---- 5. Calcular media e RMS ----
+        I_mean = np.mean(I_CAM1)
+        sigma = np.sqrt(np.mean((I_CAM1 - I_mean)**2))
 
-"""
-At this part we calculate for the intensities of the field in the CAM1
-"""
-#Intensity of the input field
-I_0 = np.abs(U_0)**2
+        # Contraste RMS normalizado
+        CRMS = sigma / I_mean if I_mean != 0 else 0
 
-#Intensity at the sensor CAM1
-I_CAM1 = np.abs(U_CAM1)**2
+        # ---- 6. Guardar resultado ----
+        CRMS_map[i, j] = CRMS
 
-#Normalization of the intensity
-if (np.max(I_CAM1) ==0):
-    I_CAM1 = I_CAM1
-else:
-    I_CAM1 = I_CAM1 / np.max(I_CAM1)
+        print(f"CRMS for radius {Rin:.3f} and transmitance {T:.1f}: {CRMS:.6f}")
+        
 
-"""
-Plotting the results
-"""
+# Normalize radius values to percentage of Rmax
+radios_pct = (radios / Rmax) * 100
 
-#We plot the intensity of the field before and after transmitance
-#plot_fields(I_beforepupile, I_afterpupile, x_2, y_2, x_2, y_2, Cut_Factor=40, title0 = "Intensidad de campo antes\n de M1", titlez = "Intensidad del Campo después \n de M1")
+plt.figure(figsize=(7,6))
 
-#We plot the intensity of the input field and the intensity at the sensor CAM1 with the coordinates of the CAM1
-plot_fields(I_0, np.log10(I_CAM1), x_3, y_3, x_magnificated, y_magnificated, Cut_Factor=10, title0 = "Intensidad Objeto", titlez = "Intensidad del Campo propagado\n en CAM1")
+# Mapa de calor
+plt.imshow(CRMS_map, 
+           origin='lower', 
+           aspect='auto',
+           extent=[transmitancias[0], transmitancias[-1],
+                   radios_pct[0], radios_pct[-1]], cmap='inferno')
 
+plt.colorbar(label='CRMS')
 
+plt.xlabel('Transmitancia (T)')
+plt.ylabel(r'Radio interno (% de Rmax)')
+plt.title('Mapa de contraste RMS')
 
+plt.show()
+        
